@@ -5,10 +5,13 @@ Go is a general purpose programming language that was developed at Google in 200
 ## Resources:
 
 Official Website: https://golang.org/
+
 Wikipedia: https://en.wikipedia.org/wiki/Go_(programming_language)
+
 An Introduction to Programming in Go by Caleb Doxsey: https://www.golang-book.com/books/intro
 
 ## Videos
 
 Rob Pike - Concurrency Is Not Parallelism: https://www.youtube.com/watch?v=cN_DpYBzKso
+
 Ray Hightower - Exploring Parallelism With Parallella and Raspberry Pi: https://vimeo.com/191595395
