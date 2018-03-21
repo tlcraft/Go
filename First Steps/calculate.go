@@ -19,4 +19,10 @@ func calculate(x, y int) (sum, product int) {
 func main() {
 	fmt.Println(calculate(42, 13))
 	fmt.Println(calculate(2, 5))
+
+	var i, j int = 3, 4
+	fmt.Println(calculate(i, j))
+
+	k, l := 7, 8.5
+	fmt.Println(calculate(k, int(l)))
 }
