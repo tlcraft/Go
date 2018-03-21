@@ -10,8 +10,10 @@ func multiply(x, y int) int {
 	return x * y
 }
 
-func calculate(x, y int) (int, int) {
-	return add(x, y), multiply(x, y)
+func calculate(x, y int) (sum, product int) {
+	sum = add(x, y)
+	product = multiply(x, y)
+	return sum, product
 }
 
 func main() {
