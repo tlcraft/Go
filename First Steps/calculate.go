@@ -17,12 +17,16 @@ func calculate(x, y int) (sum, product int) {
 }
 
 func main() {
-	fmt.Println(calculate(42, 13))
-	fmt.Println(calculate(2, 5))
+	printData(calculate(42, 13))
+	printData(calculate(2, 5))
 
 	var i, j int = 3, 4
-	fmt.Println(calculate(i, j))
+	printData(calculate(i, j))
 
 	k, l := 7, 8.5
-	fmt.Println(calculate(k, int(l)))
+	printData(calculate(k, int(l)))
+}
+
+func printData(sum, product int) {
+	fmt.Printf("Sum: %v \nProduct: %v\n\n", sum, product)
 }
