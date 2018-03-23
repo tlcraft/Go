@@ -25,6 +25,10 @@ func main() {
 
 	k, l := 7, 8.5
 	printData(calculate(k, int(l)))
+
+	for a, b := 5, 10; a <= 10; a, b = a+1, b+10 {
+		printData(calculate(a, b))
+	}
 }
 
 func printData(sum, product int) {
