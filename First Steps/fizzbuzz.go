@@ -7,9 +7,28 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 func main() {
+	start := time.Now()
+	initialFizzBuzz()
+	end := time.Now()
+
+	var duration time.Duration = end.Sub(start)
+
+	fmt.Printf("\n** Stats **\nStart: [%v]\nEnd: [%v]\nDuration: [%v]\n", start, end, duration)
+
+	start = time.Now()
+	fizzBuzz()
+	end = time.Now()
+
+	duration = end.Sub(start)
+
+	fmt.Printf("\n** Stats **\nStart: [%v]\nEnd: [%v]\nDuration: [%v]\n", start, end, duration)
+}
+
+func initialFizzBuzz() {
 	var fizzBuzz string
 	var isNonFizzBuzz bool
 
@@ -33,5 +52,27 @@ func main() {
 		fizzBuzz += "\n"
 	}
 
-	fmt.Println(fizzBuzz)
+	fmt.Print(fizzBuzz)
+}
+
+func fizzBuzz() {
+	var fizzBuzz string
+
+	for i := 1; i < 101; i++ {
+		fizzBuzz = ""
+
+		if i%3 == 0 {
+			fizzBuzz += "Fizz"
+		}
+
+		if i%5 == 0 {
+			fizzBuzz += "Buzz"
+		}
+
+		if len(fizzBuzz) == 0 {
+			fmt.Println(i)
+		} else {
+			fmt.Println(fizzBuzz)
+		}
+	}
 }
