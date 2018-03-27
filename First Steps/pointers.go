@@ -18,4 +18,11 @@ func main() {
 	fmt.Println(*p)
 	fmt.Println(p)
 	fmt.Println(q)
+	fmt.Println(*q)
+	fmt.Println(&p.X)
+
+	p.X = 15
+	fmt.Println(p.X)
+	fmt.Println(*q)
+	fmt.Println(*p)
 }
