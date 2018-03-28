@@ -23,6 +23,7 @@ func main() {
 
 	p.X = 15
 	fmt.Println(p.X)
+	fmt.Println((*p).X)
 	fmt.Println(*q)
 	fmt.Println(*p)
 }
