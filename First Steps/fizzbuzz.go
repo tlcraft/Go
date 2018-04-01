@@ -10,22 +10,26 @@ import (
 	"time"
 )
 
-func main() {
+type function func()
+
+var fn function
+var duration time.Duration
+
+func runTest(fn function) {
 	start := time.Now()
-	initialFizzBuzz()
+	fn()
 	end := time.Now()
-
-	var duration time.Duration = end.Sub(start)
-
-	fmt.Printf("\n** Stats **\nStart: [%v]\nEnd: [%v]\nDuration: [%v]\n", start, end, duration)
-
-	start = time.Now()
-	fizzBuzz()
-	end = time.Now()
 
 	duration = end.Sub(start)
 
 	fmt.Printf("\n** Stats **\nStart: [%v]\nEnd: [%v]\nDuration: [%v]\n", start, end, duration)
+}
+
+func main() {
+	fn = initialFizzBuzz
+	runTest(fn)
+	fn = fizzBuzz
+	runTest(fn)
 }
 
 func initialFizzBuzz() {
