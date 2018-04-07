@@ -1,21 +1,31 @@
 package main
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 type Card interface {
 	GetName() string
 }
 
 type StandardCard struct {
-	Name string
+	Rank string
+	Suit string
 }
 
 // Implicit Card interface implementation
 func (card StandardCard) GetName() string {
-	return card.Name
+	var b bytes.Buffer
+
+	b.WriteString(card.Rank)
+	b.WriteString(" of ")
+	b.WriteString(card.Suit)
+
+	return b.String()
 }
 
 func main() {
-	var c Card = StandardCard{"Ace of Spades"}
+	var c Card = StandardCard{"Ace", "Spades"}
 	fmt.Println(c.GetName())
 }
