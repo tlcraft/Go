@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 )
 
 type Card interface {
@@ -15,7 +16,7 @@ type StandardCard struct {
 	Suit string
 }
 
-// Implicit Card interface implementation
+// Implicit Card interface implementation, also I just learnd this playing with concrete types: StandardCard does not implement Card (GetName method has pointer receiver)
 func (card *StandardCard) GetName() string {
 	if card == nil {
 		return "nil"
@@ -40,6 +41,30 @@ func (tcg TCGCard) GetName() string {
 	return tcg.Title
 }
 
+type UnoCard struct {
+	Color  string
+	Number int
+}
+
+func (uno UnoCard) GetName() string {
+	var b bytes.Buffer
+
+	b.WriteString(uno.Color)
+	b.WriteString(strconv.Itoa(uno.Number))
+
+	return b.String()
+}
+
+func ConcreteCardType(i Card) {
+	t, ok := i.(UnoCard)
+	if ok {
+		fmt.Println(ok)
+		fmt.Printf("%v %T", t, t)
+	} else {
+		fmt.Println("Not of type UnoCard")
+	}
+}
+
 func main() {
 	var c Card = &StandardCard{"Ace", "Spades"}
 	fmt.Println(c.GetName())
@@ -54,4 +79,8 @@ func main() {
 	var nilCard *StandardCard
 	iCard = nilCard
 	fmt.Println(iCard.GetName())
+
+	var uno = UnoCard{"Blue", 3}
+	ConcreteCardType(i)
+	ConcreteCardType(uno)
 }
