@@ -16,7 +16,8 @@ type StandardCard struct {
 	Suit string
 }
 
-// Implicit Card interface implementation, also I just learnd this playing with concrete types: StandardCard does not implement Card (GetName method has pointer receiver)
+// Implicit Card interface implementation attempt, also I just learned this playing with concrete types: StandardCard does not implement Card (GetName method has pointer receiver)
+// More info: https://stackoverflow.com/a/40824044/8094831
 func (card *StandardCard) GetName() string {
 	if card == nil {
 		return "nil"
@@ -56,13 +57,26 @@ func (uno UnoCard) GetName() string {
 }
 
 func CompareConcreteCardType(i Card) {
-	t, ok := i.(UnoCard) // type assertion to grab the interface value's underlying concrete value
+	t, ok := i.(UnoCard) // Type assertion to grab the interface value's underlying concrete value
 	if ok {
 		fmt.Println(ok)
 		fmt.Printf("%v %T", t, t)
 	} else {
 		fmt.Println("Not of type UnoCard")
-		fmt.Printf("%v %T\n", t, t) // zero values of UnoCard
+		fmt.Printf("%v %T\n", t, t) // Zero values of UnoCard
+	}
+}
+
+func TypeSwitchFunc(i Card) {
+	switch v := i.(type) {
+	case UnoCard:
+		fmt.Println("Uno dos tres")
+	//case StandardCard: // Because of the pointer receiver, again, the StandardCard doesn't adhere to the Card interface: (GetName method has pointer receiver)
+	//	fmt.Println("21!")
+	case TCGCard:
+		fmt.Println("Gotta catch 'em all!")
+	default:
+		fmt.Printf("v is type %T and i is type %T\n", v, i)
 	}
 }
 
@@ -84,4 +98,12 @@ func main() {
 	var uno = UnoCard{"Blue", 3}
 	CompareConcreteCardType(i)
 	CompareConcreteCardType(uno)
+
+	fmt.Println("\n**Type Switches**")
+	TypeSwitchFunc(c)
+	TypeSwitchFunc(i)
+	TypeSwitchFunc(tcg)
+	TypeSwitchFunc(iCard)
+	TypeSwitchFunc(nilCard)
+	TypeSwitchFunc(uno)
 }
