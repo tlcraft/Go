@@ -55,13 +55,14 @@ func (uno UnoCard) GetName() string {
 	return b.String()
 }
 
-func ConcreteCardType(i Card) {
-	t, ok := i.(UnoCard)
+func CompareConcreteCardType(i Card) {
+	t, ok := i.(UnoCard) // type assertion to grab the interface value's underlying concrete value
 	if ok {
 		fmt.Println(ok)
 		fmt.Printf("%v %T", t, t)
 	} else {
 		fmt.Println("Not of type UnoCard")
+		fmt.Printf("%v %T\n", t, t) // zero values of UnoCard
 	}
 }
 
@@ -81,6 +82,6 @@ func main() {
 	fmt.Println(iCard.GetName())
 
 	var uno = UnoCard{"Blue", 3}
-	ConcreteCardType(i)
-	ConcreteCardType(uno)
+	CompareConcreteCardType(i)
+	CompareConcreteCardType(uno)
 }
