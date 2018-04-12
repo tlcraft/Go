@@ -11,6 +11,11 @@ type Card interface {
 	//GetRank() string // Causes an error because the concrete cards don't have a corresponding method - (missing GetRank method)
 }
 
+// invalid receiver type Card (Card is an interface type)
+// func (card Card) String() string {
+// 	return card.GetName()
+// }
+
 type StandardCard struct {
 	Rank string
 	Suit string
@@ -32,6 +37,10 @@ func (card *StandardCard) GetName() string {
 	}
 }
 
+func (card StandardCard) String() string {
+	return fmt.Sprintf("%v %v", card.Rank, card.Suit)
+}
+
 type TCGCard struct {
 	Artist  string
 	Title   string
@@ -40,6 +49,10 @@ type TCGCard struct {
 
 func (tcg TCGCard) GetName() string {
 	return tcg.Title
+}
+
+func (tcg TCGCard) String() string {
+	return fmt.Sprintf("%v %v %v", tcg.Title, tcg.Defense, tcg.Artist)
 }
 
 type UnoCard struct {
@@ -54,6 +67,10 @@ func (uno UnoCard) GetName() string {
 	b.WriteString(strconv.Itoa(uno.Number))
 
 	return b.String()
+}
+
+func (uno UnoCard) String() string {
+	return fmt.Sprintf("%v %v", uno.Color, uno.Number)
 }
 
 func CompareConcreteCardType(i Card) {
@@ -71,7 +88,7 @@ func TypeSwitchFunc(i Card) {
 	switch v := i.(type) {
 	case UnoCard:
 		fmt.Println("Uno dos tres")
-	//case StandardCard: // Because of the pointer receiver, again, the StandardCard doesn't adhere to the Card interface: (GetName method has pointer receiver)
+	//case StandardCard: // Because of the pointer receiver in GetName(), again, the StandardCard doesn't adhere to the Card interface: (GetName method has pointer receiver)
 	//	fmt.Println("21!")
 	case TCGCard:
 		fmt.Println("Gotta catch 'em all!")
@@ -106,4 +123,7 @@ func main() {
 	TypeSwitchFunc(iCard)
 	TypeSwitchFunc(nilCard)
 	TypeSwitchFunc(uno)
+
+	fmt.Println("\n\n--Stringer--")
+	fmt.Println(c, i, tcg, iCard, nilCard, uno)
 }
