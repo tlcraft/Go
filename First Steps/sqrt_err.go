@@ -1,8 +1,17 @@
+// A Tour of Go Exercise: Errors
+
 package main
 
 import (
 	"fmt"
 )
+
+// Note: a call to fmt.Sprint(e) inside the Error method will send the program into an infinite loop.
+// You can avoid this by converting e first: fmt.Sprint(float64(e)). Why?
+// My initial thought: because ErrNegativeSqrt doesn't implement the Stringer interface so an error occurs, causing the Error method to fire, etc.
+// Converting the type allows the stringer String method to fire.
+
+// Answer to the question: https://stackoverflow.com/a/27475316/8094831
 
 type ErrNegativeSqrt float64
 

@@ -1,3 +1,5 @@
+// A Tour of Go Exercise: Loops and Functions
+
 package main
 
 import (
@@ -9,11 +11,6 @@ type ErrNegativeSqrt float64
 func (e ErrNegativeSqrt) Error() string {
 	return fmt.Sprintf("cannot Sqrt negative number: %v", float64(e))
 }
-
-// Note: a call to fmt.Sprint(e) inside the Error method will send the program into an infinite loop.
-// You can avoid this by converting e first: fmt.Sprint(float64(e)). Why?
-// My initial thought: because ErrNegativeSqrt doesn't implement the Stringer interface so an error occurs, causing the Error method to fire, etc.
-// Converting the type allows the stringer String method to fire.
 
 func main() {
 	printSqrt(9)
