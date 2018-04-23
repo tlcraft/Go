@@ -15,7 +15,6 @@ func (mr MyReader) Read(b []byte) (int, error) {
 	for i, _ := range b {
 		b[i] = 'A'
 		//fmt.Printf("b = %v\n", b)
-		//fmt.Printf("b[:n] = %q\n", b[:n])
 	}
 
 	return len(b), nil
