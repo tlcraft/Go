@@ -15,7 +15,7 @@ func add(x, y int, c chan int) {
 }
 
 func add2(x, y int, c chan int) {
-	time.Sleep(1000 * time.Millisecond)
+	defer say("add2")
 	c <- x + y
 }
 
@@ -27,12 +27,15 @@ func say(s string) {
 }
 
 func main() {
-	c := make(chan int)
-	ch := make(chan int)
-	go add(1, 2, c)
-	defer add(2, 3, ch)
-	print("One")
 	defer say("Good-bye")
+
+	c := make(chan int)
+	deferCh := make(chan int)
+
+	go add(1, 2, c)
+	go add2(2, 3, deferCh)
+
+	print("One")
 
 	go say("world")
 	go say("hello")
@@ -40,8 +43,10 @@ func main() {
 	go print("Four")
 	defer print("Two")
 	go print("Three")
+
 	sum := <-c
-	sumCh := <-ch // blows up I presume because ch won't be available until after this surrounding function returns according to defer
+	sumCh := <-deferCh
+
 	fmt.Println(sum)
 	fmt.Println(sumCh)
 
