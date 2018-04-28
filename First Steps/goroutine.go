@@ -17,6 +17,7 @@ func add(x, y int, c chan int) {
 func add2(x, y int, c chan int) {
 	defer say("add2")
 	c <- x + y
+	close(c)
 }
 
 func say(s string) {
