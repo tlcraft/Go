@@ -11,6 +11,8 @@ func fibonacci(c, quit chan int) {
 		case <-quit:
 			fmt.Println("quit")
 			return
+		default:
+			fmt.Println("fib default")
 		}
 	}
 }
@@ -24,6 +26,8 @@ func twos(c, done chan int) {
 		case <-done:
 			fmt.Println("done")
 			return
+		default:
+			fmt.Println("twos default")
 		}
 	}
 }
