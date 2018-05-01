@@ -38,4 +38,16 @@ func main() {
 			break
 		}
 	}
+
+	SameFuncTest(tree.New(1), tree.New(1))
+	SameFuncTest(tree.New(1), tree.New(2))
+	SameFuncTest(tree.New(3), tree.New(3))
+	SameFuncTest(tree.New(4), tree.New(3))
+}
+
+func SameFuncTest(tree1, tree2 *tree.Tree) {
+	areSame := Same(tree1, tree2)
+	fmt.Println("\ntree1 and tree2 are the same:", areSame)
+	fmt.Println("tree1", tree1.String())
+	fmt.Println("tree2", tree2.String())
 }
