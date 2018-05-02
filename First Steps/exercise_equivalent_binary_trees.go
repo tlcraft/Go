@@ -6,15 +6,21 @@ import "fmt"
 // Walk walks the tree t sending all values
 // from the tree to the channel ch.
 func Walk(t *tree.Tree, ch chan int) {
+	RecursiveWalk(t, ch)
+	close(ch)
+}
+
+// Great point: https://stackoverflow.com/a/12224111/8094831
+func RecursiveWalk(t *tree.Tree, ch chan int) {
 	if t != nil {
 		ch <- t.Value
 
 		if t.Left != nil {
-			Walk(t.Left, ch)
+			RecursiveWalk(t.Left, ch)
 		}
 
 		if t.Right != nil {
-			Walk(t.Right, ch)
+			RecursiveWalk(t.Right, ch)
 		}
 	}
 }
@@ -22,18 +28,51 @@ func Walk(t *tree.Tree, ch chan int) {
 // Same determines whether the trees
 // t1 and t2 contain the same values.
 func Same(t1, t2 *tree.Tree) bool {
-	return true
+	ch1, ch2 := make(chan int), make(chan int)
+	m := make(map[int]int)
+	var areSame bool = true
+
+	go Walk(t1, ch1)
+	go Walk(t2, ch2)
+
+	for {
+		v1, ok := <-ch1
+		if ok {
+			m[v1] += 1
+		} else {
+			break
+		}
+	}
+
+	for {
+		v2, ok := <-ch2
+		if ok {
+			m[v2] += 1
+		} else {
+			break
+		}
+	}
+
+	for _, v := range m {
+		if v != 2 {
+			areSame = false
+			break
+		}
+	}
+
+	return areSame
 }
 
 func main() {
 	ch := make(chan int)
-	go Walk(tree.New(1), ch)
+	tree0 := tree.New(1)
+	go Walk(tree0, ch)
+	fmt.Println(tree0)
 
-	// TODO try using a capacity and range instead
-	for i := 0; i < 10; i++ {
-		i, ok := <-ch
+	for {
+		u, ok := <-ch
 		if ok {
-			fmt.Println(i)
+			fmt.Println(u)
 		} else {
 			break
 		}
