@@ -38,7 +38,7 @@ func Same(t1, t2 *tree.Tree) bool {
 	for {
 		v1, ok := <-ch1
 		if ok {
-			m[v1] += 1
+			m[v1]++
 		} else {
 			break
 		}
@@ -47,7 +47,7 @@ func Same(t1, t2 *tree.Tree) bool {
 	for {
 		v2, ok := <-ch2
 		if ok {
-			m[v2] += 1
+			m[v2]++
 		} else {
 			break
 		}
