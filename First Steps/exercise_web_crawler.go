@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 )
 
 type Fetcher interface {
@@ -10,16 +11,37 @@ type Fetcher interface {
 	Fetch(url string) (body string, urls []string, err error)
 }
 
-// TODO: Refactor to use a SafeCounter like in the mutex-counter.go example
-var found = make(map[string]int)
+var urlMap = SafeUrlMap{found: make(map[string]int)}
+
+type SafeUrlMap struct {
+	found map[string]int
+	mux   sync.Mutex
+}
+
+func (m *SafeUrlMap) Add(url string) {
+	m.mux.Lock()
+	m.found[url]++
+	m.mux.Unlock()
+}
+
+func (m *SafeUrlMap) Contains(url string) bool {
+	isFound := false
+
+	m.mux.Lock()
+	if m.found[url] > 0 {
+		isFound = true
+	}
+	m.mux.Unlock()
+
+	return isFound
+}
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
 func Crawl(url string, depth int, fetcher Fetcher) {
 	// TODO: Fetch URLs in parallel.
-	// TODO: Don't fetch the same URL twice.
 	// This implementation doesn't do either:
-	if depth <= 0 || found[url] > 0 {
+	if depth <= 0 || urlMap.Contains(url) {
 		return
 	}
 
@@ -29,7 +51,7 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 		return
 	}
 	fmt.Printf("found: %s %q\n", url, body)
-	found[url]++
+	urlMap.Add(url)
 	for _, u := range urls {
 		Crawl(u, depth-1, fetcher)
 	}
