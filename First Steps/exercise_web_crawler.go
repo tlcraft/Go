@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 )
 
@@ -12,6 +13,7 @@ type Fetcher interface {
 }
 
 var urlMap = SafeUrlMap{found: make(map[string]int)}
+var numCPU = runtime.NumCPU()
 
 type SafeUrlMap struct {
 	found map[string]int
@@ -38,28 +40,54 @@ func (m *SafeUrlMap) Contains(url string) bool {
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(url string, depth int, fetcher Fetcher) {
-	// TODO: Fetch URLs in parallel.
-	// This implementation doesn't do either:
+func Crawl(url string, depth int, fetcher Fetcher, c chan string) {
+	// Stack Overflow answer: https://stackoverflow.com/a/13223836/8094831
+	// Parallelization section of Effective Go: https://golang.org/doc/effective_go.html#parallel
+	defer close(c)
+
 	if depth <= 0 || urlMap.Contains(url) {
 		return
 	}
 
 	body, urls, err := fetcher.Fetch(url)
 	if err != nil {
-		fmt.Println(err)
+		c <- err.Error()
 		return
 	}
-	fmt.Printf("found: %s %q\n", url, body)
+
+	c <- fmt.Sprintf("found: %s %q", url, body)
+
 	urlMap.Add(url)
-	for _, u := range urls {
-		Crawl(u, depth-1, fetcher)
+
+	result := make([]chan string, len(urls))
+	for i, u := range urls {
+		result[i] = make(chan string)
+		go Crawl(u, depth-1, fetcher, result[i])
 	}
+
+	for i := range result {
+		for s := range result[i] {
+			c <- s
+		}
+	}
+
 	return
 }
 
 func main() {
-	Crawl("https://golang.org/", 4, fetcher)
+	fmt.Println("NumCPU", numCPU)
+
+	c := make([]chan string, numCPU)
+	for i := 0; i < numCPU; i++ {
+		c[i] = make(chan string)
+		go Crawl("https://golang.org/", 4, fetcher, c[i])
+	}
+
+	for i := range c {
+		for s := range c[i] {
+			fmt.Println(s)
+		}
+	}
 }
 
 // fakeFetcher is Fetcher that returns canned results.
