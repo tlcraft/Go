@@ -12,30 +12,24 @@ type Fetcher interface {
 	Fetch(url string) (body string, urls []string, err error)
 }
 
-var urlMap = SafeUrlMap{found: make(map[string]int)}
+var urlMap = SafeUrlMap{found: make(map[string]bool)}
 var numCPU = runtime.NumCPU()
 
 type SafeUrlMap struct {
-	found map[string]int
+	found map[string]bool
 	mux   sync.Mutex
 }
 
 func (m *SafeUrlMap) Add(url string) {
 	m.mux.Lock()
-	m.found[url]++
+	m.found[url] = true
 	m.mux.Unlock()
 }
 
 func (m *SafeUrlMap) Contains(url string) bool {
-	isFound := false
-
 	m.mux.Lock()
-	if m.found[url] > 0 {
-		isFound = true
-	}
-	m.mux.Unlock()
-
-	return isFound
+	defer m.mux.Unlock()
+	return m.found[url]
 }
 
 // Crawl uses fetcher to recursively crawl
@@ -76,12 +70,20 @@ func Crawl(url string, depth int, fetcher Fetcher, c chan string) {
 
 func main() {
 	//fmt.Println("NumCPU", numCPU)
+	fmt.Println("Fetcher len:", len(fetcher))
 
-	c := make(chan string)
-	go Crawl("https://golang.org/", 4, fetcher, c)
+	c := make([]chan string, len(fetcher))
+	i := 0
+	for k := range fetcher {
+		c[i] = make(chan string)
+		go Crawl(k, 4, fetcher, c[i])
+		i++
+	}
 
-	for s := range c {
-		fmt.Println(s)
+	for i := range c {
+		for s := range c[i] {
+			fmt.Println(s)
+		}
 	}
 }
 
@@ -114,7 +116,6 @@ var fetcher = fakeFetcher{
 		[]string{
 			"https://golang.org/",
 			"https://golang.org/cmd/",
-			"https://golang.org/pkg/fmt/",
 			"https://golang.org/pkg/os/",
 		},
 	},
@@ -123,6 +124,7 @@ var fetcher = fakeFetcher{
 		[]string{
 			"https://golang.org/",
 			"https://golang.org/pkg/",
+			"https://golang.org/test/t",
 		},
 	},
 	"https://golang.org/pkg/os/": &fakeResult{
@@ -130,6 +132,22 @@ var fetcher = fakeFetcher{
 		[]string{
 			"https://golang.org/",
 			"https://golang.org/pkg/",
+			"https://golang.org/test/",
+		},
+	},
+	"https://golang.org/test/": &fakeResult{
+		"Test Package",
+		[]string{
+			"https://golang.org/",
+			"https://golang.org/pkg/",
+			"https://golang.org/cmd/",
+		},
+	},
+	"https://golang.org/test/t": &fakeResult{
+		"Test Package 2.0",
+		[]string{
+			"https://golang.org/",
+			"https://golang.org/test/",
 		},
 	},
 }
