@@ -75,18 +75,13 @@ func Crawl(url string, depth int, fetcher Fetcher, c chan string) {
 }
 
 func main() {
-	fmt.Println("NumCPU", numCPU)
+	//fmt.Println("NumCPU", numCPU)
 
-	c := make([]chan string, numCPU)
-	for i := 0; i < numCPU; i++ {
-		c[i] = make(chan string)
-		go Crawl("https://golang.org/", 4, fetcher, c[i])
-	}
+	c := make(chan string)
+	go Crawl("https://golang.org/", 4, fetcher, c)
 
-	for i := range c {
-		for s := range c[i] {
-			fmt.Println(s)
-		}
+	for s := range c {
+		fmt.Println(s)
 	}
 }
 
