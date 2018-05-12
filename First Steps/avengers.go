@@ -49,6 +49,9 @@ func main() {
 	// incorporate advantages and disadvantages for each character
 	// teaming up against villains (villain "hero capacity")
 	// special attacks and randomness for each battle
+
+	// Other Ideas
+	// Randomly add general enemies to a slice which the heroes iterate over and fight
 }
 
 func SaveTheWolrd() {
