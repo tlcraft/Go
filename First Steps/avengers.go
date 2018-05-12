@@ -34,17 +34,16 @@ func (m *SafeVillainMap) Contains(villain string) bool {
 	return m.fought[villain]
 }
 
+func PrintStats(c []Character, header string) {
+	fmt.Println(header)
+	for _, v := range c {
+		fmt.Printf("Name: %v\n\tAttack Power: %v\n\tDefense: %v\n\tHealth: %v\n", v.name, v.attackPower, v.defense, v.health)
+	}
+}
+
 func main() {
-	fmt.Println("** Heroes **")
-	for _, v := range heroes {
-		fmt.Printf("Name: %v\n\tAttack Power: %v\n\tDefense: %v\n", v.name, v.attackPower, v.defense)
-	}
-
-	fmt.Println("-- Villains --")
-	for _, v := range villains {
-		fmt.Printf("Name: %v\n\tAttack Power: %v\n\tDefense: %v\n", v.name, v.attackPower, v.defense)
-	}
-
+	PrintStats(heroes, "** Heroes **")
+	PrintStats(villains, "-- Villains --")
 	// TODO
 	// incorporate advantages and disadvantages for each character
 	// teaming up against villains (villain "hero capacity")
@@ -56,12 +55,17 @@ func main() {
 
 func SaveTheWolrd() {
 	// TODO have the heroes fight the villains concurrently (do attack power damage to defense and vice versa)
+
+	// while at least one hero is alive and enemies remain
+	// go fight(hero, enemy slice) --hero iterates over slice doing damage and taking damage
+	// print living heroes and villains
 }
 
 type Character struct {
 	name        string
 	attackPower int
 	defense     int
+	health      int
 }
 
 var heroes = []Character{
@@ -69,11 +73,13 @@ var heroes = []Character{
 		name:        "Thor",
 		attackPower: 20,
 		defense:     50,
+		health:      70,
 	},
 	Character{
 		name:        "Iron Man",
 		attackPower: 15,
 		defense:     45,
+		health:      60,
 	},
 }
 
@@ -82,10 +88,12 @@ var villains = []Character{
 		name:        "Thanos",
 		attackPower: 25,
 		defense:     100,
+		health:      200,
 	},
 	Character{
 		name:        "Ultron",
 		attackPower: 15,
 		defense:     80,
+		health:      150,
 	},
 }
