@@ -48,9 +48,9 @@ func main() {
 	c := make([]chan string, numHeroes)
 
 	fmt.Println("FIGHT!\n")
-	for i, v := range heroes {
+	for i, _ := range heroes {
 		c[i] = make(chan string)
-		go SaveTheWolrd(i*len(villains)/numHeroes, (i+1)*len(villains)/numHeroes, v, c[i])
+		go SaveTheWolrd(i*len(villains)/numHeroes, (i+1)*len(villains)/numHeroes, i, c[i])
 	}
 
 	for i := range c {
@@ -71,17 +71,29 @@ func main() {
 	PrintStats(villains, "-- Villains --")
 }
 
-func SaveTheWolrd(i, n int, hero Character, c chan string) {
+func SaveTheWolrd(i, n, heroIndex int, c chan string) {
 	defer close(c)
-	// TODO have the heroes fight the villains concurrently (do attack power damage to defense and vice versa)
+
 	for ; i < n; i++ {
-		villains[i].health -= hero.attackPower
-		c <- fmt.Sprintf("%v does %v damage to %v", hero.name, hero.attackPower, villains[i].name)
+		if villains[i].health > 0 && heroes[heroIndex].health > 0 {
+			villains[i].health -= heroes[heroIndex].attackPower
+			c <- fmt.Sprintf("%v does %v damage to %v", heroes[heroIndex].name, heroes[heroIndex].attackPower, villains[i].name)
+		}
+		// Refactor to use a method like Battle below, what's a better way to do this? Pointers probably.
+		if heroes[heroIndex].health > 0 && villains[i].health > 0 {
+			heroes[heroIndex].health -= villains[i].attackPower
+			c <- fmt.Sprintf("%v does %v damage to %v", villains[i].name, villains[i].attackPower, heroes[heroIndex].name)
+		}
 	}
 
 	// while at least one hero is alive and enemies remain
 	// go fight(hero, enemy slice) --hero iterates over slice doing damage and taking damage
 	// print living heroes and villains
+}
+
+func Battle(a, d int, attacker, defender []Character, c chan string) {
+	defender[d].health -= attacker[a].attackPower
+	c <- fmt.Sprintf("%v does %v damage to %v", attacker[a].name, attacker[a].attackPower, defender[d].name)
 }
 
 type Character struct {
@@ -133,7 +145,7 @@ var villains = []Character{
 	},
 	Character{
 		name:        "Goon",
-		attackPower: 31,
+		attackPower: 1,
 		defense:     5,
 		health:      10,
 	},
