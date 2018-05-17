@@ -34,9 +34,9 @@ func (m *SafeVillainMap) Contains(villain string) bool {
 	return m.fought[villain]
 }
 
-func PrintStats(c []Character, header string) {
+func PrintStats(c CharacterList, header string) {
 	fmt.Println(header)
-	for _, v := range c {
+	for _, v := range c.list {
 		fmt.Printf("Name: %v\n\tAttack Power: %v\n\tDefense: %v\n\tHealth: %v\n", v.name, v.attackPower, v.defense, v.health)
 	}
 }
@@ -44,13 +44,14 @@ func PrintStats(c []Character, header string) {
 func main() {
 	PrintStats(heroes, "** Heroes **")
 	PrintStats(villains, "-- Villains --")
-	numHeroes := len(heroes)
+	numHeroes := len(heroes.list)
+	numVillains := len(villains.list)
 	c := make([]chan string, numHeroes)
 
 	fmt.Println("FIGHT!\n")
-	for i, _ := range heroes {
+	for i, _ := range heroes.list {
 		c[i] = make(chan string)
-		go SaveTheWolrd(i*len(villains)/numHeroes, (i+1)*len(villains)/numHeroes, i, c[i])
+		go SaveTheWolrd(i*numVillains/numHeroes, (i+1)*numVillains/numHeroes, i, c[i])
 	}
 
 	for i := range c {
@@ -75,14 +76,12 @@ func SaveTheWolrd(i, n, heroIndex int, c chan string) {
 	defer close(c)
 
 	for ; i < n; i++ {
-		if villains[i].health > 0 && heroes[heroIndex].health > 0 {
-			villains[i].health -= heroes[heroIndex].attackPower
-			c <- fmt.Sprintf("%v does %v damage to %v", heroes[heroIndex].name, heroes[heroIndex].attackPower, villains[i].name)
+		if villains.list[i].health > 0 && heroes.list[heroIndex].health > 0 {
+			Battle(heroes.list[heroIndex], villains.list[i], c)
 		}
-		// Refactor to use a method like Battle below, what's a better way to do this? Pointers probably.
-		if heroes[heroIndex].health > 0 && villains[i].health > 0 {
-			heroes[heroIndex].health -= villains[i].attackPower
-			c <- fmt.Sprintf("%v does %v damage to %v", villains[i].name, villains[i].attackPower, heroes[heroIndex].name)
+
+		if heroes.list[heroIndex].health > 0 && villains.list[i].health > 0 {
+			Battle(villains.list[i], heroes.list[heroIndex], c)
 		}
 	}
 
@@ -91,9 +90,9 @@ func SaveTheWolrd(i, n, heroIndex int, c chan string) {
 	// print living heroes and villains
 }
 
-func Battle(a, d int, attacker, defender []Character, c chan string) {
-	defender[d].health -= attacker[a].attackPower
-	c <- fmt.Sprintf("%v does %v damage to %v", attacker[a].name, attacker[a].attackPower, defender[d].name)
+func Battle(attacker, defender *Character, c chan string) {
+	defender.health -= attacker.attackPower
+	c <- fmt.Sprintf("%v does %v damage to %v", attacker.name, attacker.attackPower, defender.name)
 }
 
 type Character struct {
@@ -103,50 +102,58 @@ type Character struct {
 	health      int
 }
 
-var heroes = []Character{
-	Character{
-		name:        "Thor",
-		attackPower: 20,
-		defense:     50,
-		health:      70,
-	},
-	Character{
-		name:        "Iron Man",
-		attackPower: 15,
-		defense:     45,
-		health:      60,
+type CharacterList struct {
+	list []*Character
+}
+
+var heroes = CharacterList{
+	[]*Character{
+		&Character{
+			name:        "Thor",
+			attackPower: 20,
+			defense:     50,
+			health:      70,
+		},
+		&Character{
+			name:        "Iron Man",
+			attackPower: 15,
+			defense:     45,
+			health:      60,
+		},
 	},
 }
 
-var villains = []Character{
-	Character{
-		name:        "Thanos",
-		attackPower: 25,
-		defense:     100,
-		health:      200,
-	},
-	Character{
-		name:        "Ultron",
-		attackPower: 15,
-		defense:     80,
-		health:      150,
-	},
-	Character{
-		name:        "Thug",
-		attackPower: 2,
-		defense:     10,
-		health:      20,
-	},
-	Character{
-		name:        "Criminal",
-		attackPower: 3,
-		defense:     8,
-		health:      15,
-	},
-	Character{
-		name:        "Goon",
-		attackPower: 1,
-		defense:     5,
-		health:      10,
+var villains = CharacterList{
+	[]*Character{
+		&Character{
+			name:        "Thanos",
+			attackPower: 25,
+			defense:     100,
+			health:      200,
+		},
+		&Character{
+			name:        "Ultron",
+			attackPower: 15,
+			defense:     80,
+			health:      150,
+		},
+		&Character{
+			name:        "Thug",
+			attackPower: 2,
+			defense:     10,
+			health:      20,
+		},
+		&Character{
+			name:        "Criminal",
+			attackPower: 3,
+			defense:     8,
+			health:      15,
+		},
+		&Character{
+			name:        "Goon",
+			attackPower: 1,
+			defense:     5,
+			health:      10,
+		},
 	},
 }
