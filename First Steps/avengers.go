@@ -7,7 +7,9 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
 	"runtime"
 	"sync"
 )
@@ -62,7 +64,7 @@ func main() {
 	// TODO
 	// incorporate advantages and disadvantages for each character
 	// teaming up against villains (villain "hero capacity")
-	// special attacks and randomness for each battle
+	// special attacks
 
 	// Other Ideas
 	// Randomly add general enemies to a slice which the heroes iterate over and fight
@@ -86,13 +88,24 @@ func SaveTheWolrd(i, n, heroIndex int, c chan string) {
 	}
 
 	// while at least one hero is alive and enemies remain
-	// go fight(hero, enemy slice) --hero iterates over slice doing damage and taking damage
 	// print living heroes and villains
 }
 
 func Battle(attacker, defender *Character, c chan string) {
-	defender.health -= attacker.attackPower
-	c <- fmt.Sprintf("%v does %v damage to %v", attacker.name, attacker.attackPower, defender.name)
+	damage := CalculateDamage(attacker.attackPower)
+	defender.health -= damage
+	c <- fmt.Sprintf("%v does %v damage to %v", attacker.name, damage, defender.name)
+}
+
+// Adapted from: https://stackoverflow.com/a/32350135/8094831
+func CalculateDamage(i int) (damage int) {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(int64(i)))
+	if err != nil {
+		panic(err)
+	}
+	n := nBig.Int64()
+	//fmt.Printf("Here is a random %T in [0,%v) : %d\n", n, n, i)
+	return int(n)
 }
 
 type Character struct {
