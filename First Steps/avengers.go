@@ -53,7 +53,7 @@ func main() {
 	fmt.Println("FIGHT!\n")
 	for i, _ := range heroes.list {
 		c[i] = make(chan string)
-		go SaveTheWolrd(i*numVillains/numHeroes, (i+1)*numVillains/numHeroes, i, c[i])
+		go SaveTheWorld(i*numVillains/numHeroes, (i+1)*numVillains/numHeroes, heroes.list[i], c[i])
 	}
 
 	for i := range c {
@@ -61,34 +61,31 @@ func main() {
 			fmt.Println(s)
 		}
 	}
-	// TODO
+	// TODO Ideas
 	// incorporate advantages and disadvantages for each character
 	// teaming up against villains (villain "hero capacity")
 	// special attacks
-
-	// Other Ideas
 	// Randomly add general enemies to a slice which the heroes iterate over and fight
+	// while at least one hero is alive and enemies remain
+	// print living heroes and villains
 
 	fmt.Println("\nFinal Stats")
 	PrintStats(heroes, "** Heroes **")
 	PrintStats(villains, "-- Villains --")
 }
 
-func SaveTheWolrd(i, n, heroIndex int, c chan string) {
+func SaveTheWorld(i, n int, hero *Character, c chan string) {
 	defer close(c)
 
 	for ; i < n; i++ {
-		if villains.list[i].health > 0 && heroes.list[heroIndex].health > 0 {
-			Battle(heroes.list[heroIndex], villains.list[i], c)
+		if villains.list[i].health > 0 && hero.health > 0 {
+			Battle(hero, villains.list[i], c)
 		}
 
-		if heroes.list[heroIndex].health > 0 && villains.list[i].health > 0 {
-			Battle(villains.list[i], heroes.list[heroIndex], c)
+		if hero.health > 0 && villains.list[i].health > 0 {
+			Battle(villains.list[i], hero, c)
 		}
 	}
-
-	// while at least one hero is alive and enemies remain
-	// print living heroes and villains
 }
 
 func Battle(attacker, defender *Character, c chan string) {
@@ -132,6 +129,12 @@ var heroes = CharacterList{
 			attackPower: 15,
 			defense:     45,
 			health:      60,
+		},
+		&Character{
+			name:        "Spider-Man",
+			attackPower: 10,
+			defense:     30,
+			health:      50,
 		},
 	},
 }
