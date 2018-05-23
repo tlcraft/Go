@@ -72,6 +72,18 @@ func main() {
 	fmt.Println("\nFinal Stats")
 	PrintStats(heroes, "** Heroes **")
 	PrintStats(villains, "-- Villains --")
+
+	fmt.Println("\nTesting out a Boss Character idea")
+	fmt.Println(testBoss.character.name)
+	fmt.Println(len(testBoss.heroCapacity))
+	testBoss.heroCapacity = append(testBoss.heroCapacity, &Character{
+		name:        "Wolverine",
+		attackPower: 30,
+		defense:     60,
+		health:      100,
+	})
+	fmt.Println(len(testBoss.heroCapacity))
+	fmt.Println(testBoss.heroCapacity[0].name)
 }
 
 func SaveTheWorld(i, n int, hero *Character, c chan string) {
@@ -112,8 +124,23 @@ type Character struct {
 	health      int
 }
 
+type BossCharacter struct {
+	character    *Character
+	heroCapacity []*Character
+}
+
 type CharacterList struct {
 	list []*Character
+}
+
+var testBoss = BossCharacter{
+	&Character{
+		name:        "Sabretooth",
+		attackPower: 35,
+		defense:     55,
+		health:      90,
+	},
+	make([]*Character, 0),
 }
 
 var heroes = CharacterList{
