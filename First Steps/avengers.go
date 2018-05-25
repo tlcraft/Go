@@ -74,16 +74,37 @@ func main() {
 	PrintStats(villains, "-- Villains --")
 
 	fmt.Println("\nTesting out a Boss Character idea")
+	ch := make(chan string)
+
 	fmt.Println(testBoss.character.name)
-	fmt.Println(len(testBoss.heroCapacity))
-	testBoss.heroCapacity = append(testBoss.heroCapacity, &Character{
+	fmt.Println(len(testBoss.engagedFighters))
+	testBoss.Engage(&Character{
 		name:        "Wolverine",
 		attackPower: 30,
 		defense:     60,
 		health:      100,
 	})
-	fmt.Println(len(testBoss.heroCapacity))
-	fmt.Println(testBoss.heroCapacity[0].name)
+	fmt.Println(len(testBoss.engagedFighters))
+	fmt.Println(testBoss.engagedFighters[0].name)
+	go testBoss.Fight(ch)
+	for s := range ch {
+		fmt.Println(s)
+	}
+
+	testBoss.Engage(&Character{
+		name:        "Captain Marvel",
+		attackPower: 25,
+		defense:     65,
+		health:      110,
+	})
+	fmt.Println(len(testBoss.engagedFighters))
+
+	ch = make(chan string)
+	go testBoss.Fight(ch)
+
+	for s := range ch {
+		fmt.Println(s)
+	}
 }
 
 func SaveTheWorld(i, n int, hero *Character, c chan string) {
@@ -97,6 +118,24 @@ func SaveTheWorld(i, n int, hero *Character, c chan string) {
 		if hero.health > 0 && villains.list[i].health > 0 {
 			Battle(villains.list[i], hero, c)
 		}
+	}
+}
+
+func (boss BossCharacter) Fight(c chan string) {
+	defer close(c)
+	if len(boss.engagedFighters) == boss.capacity {
+		for _, v := range boss.engagedFighters {
+			Battle(v, boss.character, c)
+			Battle(boss.character, v, c)
+		}
+	} else {
+		c <- fmt.Sprint("The fight cannot commence yet.")
+	}
+}
+
+func (boss BossCharacter) Engage(c *Character) {
+	if len(boss.engagedFighters) < boss.capacity {
+		testBoss.engagedFighters = append(testBoss.engagedFighters, c)
 	}
 }
 
@@ -125,8 +164,9 @@ type Character struct {
 }
 
 type BossCharacter struct {
-	character    *Character
-	heroCapacity []*Character
+	character       *Character
+	engagedFighters []*Character
+	capacity        int
 }
 
 type CharacterList struct {
@@ -141,6 +181,7 @@ var testBoss = BossCharacter{
 		health:      90,
 	},
 	make([]*Character, 0),
+	2,
 }
 
 var heroes = CharacterList{
