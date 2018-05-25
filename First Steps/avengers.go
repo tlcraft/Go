@@ -51,6 +51,13 @@ func main() {
 	c := make([]chan string, numHeroes)
 
 	fmt.Println("FIGHT!\n")
+	// TODO New Direction
+	// Create a list of BossCharacters
+	// Start Go routines to send heroes to fight the bosses
+	// Engage heroes with boss characters if the capacity is not full
+	// Fight until death and then continue iterating over boss array until one side has won
+	// When heroes free up send them on to fight again after they recover some amount of health
+
 	for i, _ := range heroes.list {
 		c[i] = make(chan string)
 		go SaveTheWorld(i*numVillains/numHeroes, (i+1)*numVillains/numHeroes, heroes.list[i], c[i])
