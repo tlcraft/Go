@@ -15,6 +15,9 @@ import (
 )
 
 var numCPU = runtime.NumCPU()
+var numHeroes = len(heroes.list)
+var numVillains = len(villains.list)
+var numBosses = len(majorVillains.list)
 
 // Keeps track of which villains have been fought
 var villainMap = SafeVillainMap{fought: make(map[string]bool)}
@@ -46,15 +49,14 @@ func PrintStats(c CharacterList, header string) {
 func HeroesVsVillains() {
 	PrintStats(heroes, "** Heroes **")
 	PrintStats(villains, "-- Villains --")
-	numHeroes := len(heroes.list)
-	numVillains := len(villains.list)
+
 	c := make([]chan string, numHeroes)
 
 	fmt.Println("FIGHT!\n")
 
 	for i, _ := range heroes.list {
 		c[i] = make(chan string)
-		go SaveTheWorld(i*numVillains/numHeroes, (i+1)*numVillains/numHeroes, heroes.list[i], c[i])
+		go SaveTheWorld(i*numVillains/numHeroes, (i+1)*numVillains/numHeroes, heroes.list[i], villains.list, c[i])
 	}
 
 	for i := range c {
@@ -119,23 +121,52 @@ func BossFight() {
 	for _, v := range majorVillains.list {
 		fmt.Println("Boss Name:", v.character.name)
 	}
+
+	c := make([]chan string, numHeroes)
+
+	fmt.Println("BOSS FIGHT!\n")
+
+	for i, _ := range heroes.list {
+		c[i] = make(chan string)
+		go EngageWithBoss(i*numBosses/numHeroes, (i+1)*numBosses/numHeroes, heroes.list[i], majorVillains.list, c[i])
+	}
+
+	for i := range c {
+		for s := range c[i] {
+			fmt.Println(s)
+		}
+	}
 }
 
 func main() {
-	//HeroesVsVillains()
-	BossFight()
+	HeroesVsVillains()
+	//BossFight()
 }
 
-func SaveTheWorld(i, n int, hero *Character, c chan string) {
+func EngageWithBoss(i, n int, hero *Character, bossList []*BossCharacter, c chan string) {
+	defer close(c)
+
+	// Notes / Ideas
+	// for each boss
+	// engage boss
+	// fight until a character is defeated
+	// if hero dies return
+	// if a boss dies move onto the next boss
+
+	// one go routing should add heroes to boss slices
+	// another should iterate over the boss array and fight when the capacity is full
+}
+
+func SaveTheWorld(i, n int, hero *Character, villainList []*Character, c chan string) {
 	defer close(c)
 
 	for ; i < n; i++ {
-		if villains.list[i].health > 0 && hero.health > 0 {
-			Battle(hero, villains.list[i], c)
+		if villainList[i].health > 0 && hero.health > 0 {
+			Battle(hero, villainList[i], c)
 		}
 
-		if hero.health > 0 && villains.list[i].health > 0 {
-			Battle(villains.list[i], hero, c)
+		if hero.health > 0 && villainList[i].health > 0 {
+			Battle(villainList[i], hero, c)
 		}
 	}
 }
