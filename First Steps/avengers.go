@@ -115,6 +115,10 @@ func BossFight() {
 	for s := range ch {
 		fmt.Println(s)
 	}
+
+	for _, v := range majorVillains.list {
+		fmt.Println("Boss Name:", v.character.name)
+	}
 }
 
 func main() {
@@ -184,6 +188,10 @@ type BossCharacter struct {
 	capacity        int
 }
 
+type BossCharacterList struct {
+	list []*BossCharacter
+}
+
 type CharacterList struct {
 	list []*Character
 }
@@ -197,6 +205,30 @@ var testBoss = BossCharacter{
 	},
 	make([]*Character, 0),
 	2,
+}
+var majorVillains = BossCharacterList{
+	[]*BossCharacter{
+		&BossCharacter{
+			&Character{
+				name:        "Thanos",
+				attackPower: 25,
+				defense:     100,
+				health:      200,
+			},
+			make([]*Character, 0),
+			4,
+		},
+		&BossCharacter{
+			&Character{
+				name:        "Ultron",
+				attackPower: 15,
+				defense:     80,
+				health:      150,
+			},
+			make([]*Character, 0),
+			4,
+		},
+	},
 }
 
 var heroes = CharacterList{
@@ -224,18 +256,6 @@ var heroes = CharacterList{
 
 var villains = CharacterList{
 	[]*Character{
-		&Character{
-			name:        "Thanos",
-			attackPower: 25,
-			defense:     100,
-			health:      200,
-		},
-		&Character{
-			name:        "Ultron",
-			attackPower: 15,
-			defense:     80,
-			health:      150,
-		},
 		&Character{
 			name:        "Thug",
 			attackPower: 2,
