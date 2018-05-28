@@ -20,24 +20,21 @@ var numVillains = len(villains.list)
 var numBosses = len(majorVillains.list)
 
 // Keeps track of which villains have been fought
-var villainMap = SafeVillainMap{fought: make(map[string]bool)}
-
-type SafeVillainMap struct {
-	fought map[string]bool
-	mux    sync.Mutex
+type SafeEngagedList struct {
+	engagedFighters []*Character
+	capacity        int
+	mux             sync.Mutex
 }
 
-func (m *SafeVillainMap) Add(villain string) {
+func (m *SafeEngagedList) Add(fighter *Character) {
 	m.mux.Lock()
 	defer m.mux.Unlock()
-	m.fought[villain] = true
+	if len(m.engagedFighters) < m.capacity {
+		m.engagedFighters = append(m.engagedFighters, fighter)
+	}
 }
 
-func (m *SafeVillainMap) Contains(villain string) bool {
-	m.mux.Lock()
-	defer m.mux.Unlock()
-	return m.fought[villain]
-}
+// TODO Remove fighter from list
 
 func PrintStats(c CharacterList, header string) {
 	fmt.Println(header)
@@ -89,27 +86,27 @@ func BossFight() {
 	ch := make(chan string)
 
 	fmt.Println(testBoss.character.name)
-	fmt.Println(len(testBoss.engagedFighters))
-	testBoss.Engage(&Character{
+	fmt.Println(len(testBoss.fighterList.engagedFighters))
+	testBoss.fighterList.Add(&Character{
 		name:        "Wolverine",
 		attackPower: 30,
 		defense:     60,
 		health:      100,
 	})
-	fmt.Println(len(testBoss.engagedFighters))
-	fmt.Println(testBoss.engagedFighters[0].name)
+	fmt.Println(len(testBoss.fighterList.engagedFighters))
+	fmt.Println(testBoss.fighterList.engagedFighters[0].name)
 	go testBoss.Fight(ch)
 	for s := range ch {
 		fmt.Println(s)
 	}
 
-	testBoss.Engage(&Character{
+	testBoss.fighterList.Add(&Character{
 		name:        "Captain Marvel",
 		attackPower: 25,
 		defense:     65,
 		health:      110,
 	})
-	fmt.Println(len(testBoss.engagedFighters))
+	fmt.Println(len(testBoss.fighterList.engagedFighters))
 
 	ch = make(chan string)
 	go testBoss.Fight(ch)
@@ -119,7 +116,7 @@ func BossFight() {
 	}
 
 	for _, v := range majorVillains.list {
-		fmt.Println("Boss Name:", v.character.name)
+		fmt.Printf("Boss Name: %v Capacity: %v\n", v.character.name, v.fighterList.capacity)
 	}
 
 	c := make([]chan string, numHeroes)
@@ -140,7 +137,7 @@ func BossFight() {
 
 func main() {
 	HeroesVsVillains()
-	//BossFight()
+	BossFight()
 }
 
 func EngageWithBoss(i, n int, hero *Character, bossList []*BossCharacter, c chan string) {
@@ -173,8 +170,8 @@ func SaveTheWorld(i, n int, hero *Character, villainList []*Character, c chan st
 
 func (boss BossCharacter) Fight(c chan string) {
 	defer close(c)
-	if len(boss.engagedFighters) == boss.capacity {
-		for _, v := range boss.engagedFighters {
+	if len(boss.fighterList.engagedFighters) == boss.fighterList.capacity {
+		for _, v := range boss.fighterList.engagedFighters {
 			Battle(v, boss.character, c)
 			Battle(boss.character, v, c)
 		}
@@ -184,8 +181,8 @@ func (boss BossCharacter) Fight(c chan string) {
 }
 
 func (boss BossCharacter) Engage(c *Character) {
-	if len(boss.engagedFighters) < boss.capacity {
-		testBoss.engagedFighters = append(testBoss.engagedFighters, c)
+	if len(boss.fighterList.engagedFighters) < boss.fighterList.capacity {
+		testBoss.fighterList.engagedFighters = append(testBoss.fighterList.engagedFighters, c)
 	}
 }
 
@@ -214,9 +211,8 @@ type Character struct {
 }
 
 type BossCharacter struct {
-	character       *Character
-	engagedFighters []*Character
-	capacity        int
+	character   *Character
+	fighterList SafeEngagedList
 }
 
 type BossCharacterList struct {
@@ -234,8 +230,10 @@ var testBoss = BossCharacter{
 		defense:     55,
 		health:      90,
 	},
-	make([]*Character, 0),
-	2,
+	SafeEngagedList{
+		engagedFighters: make([]*Character, 0),
+		capacity:        2,
+	},
 }
 var majorVillains = BossCharacterList{
 	[]*BossCharacter{
@@ -246,8 +244,10 @@ var majorVillains = BossCharacterList{
 				defense:     100,
 				health:      200,
 			},
-			make([]*Character, 0),
-			4,
+			SafeEngagedList{
+				engagedFighters: make([]*Character, 0),
+				capacity:        4,
+			},
 		},
 		&BossCharacter{
 			&Character{
@@ -256,8 +256,10 @@ var majorVillains = BossCharacterList{
 				defense:     80,
 				health:      150,
 			},
-			make([]*Character, 0),
-			4,
+			SafeEngagedList{
+				engagedFighters: make([]*Character, 0),
+				capacity:        4,
+			},
 		},
 	},
 }
