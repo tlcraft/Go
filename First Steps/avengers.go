@@ -26,12 +26,36 @@ type SafeEngagedList struct {
 	mux             sync.Mutex
 }
 
-func (m *SafeEngagedList) Add(fighter *Character) {
+func (m *SafeEngagedList) Add(fighter *Character) bool {
 	m.mux.Lock()
 	defer m.mux.Unlock()
+
+	var isAdded bool = false
+
 	if len(m.engagedFighters) < m.capacity {
 		m.engagedFighters = append(m.engagedFighters, fighter)
+		isAdded = true
 	}
+
+	return isAdded
+}
+
+func (m *SafeEngagedList) CanFight() bool {
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	var canFight = false
+	if m.capacity == len(m.engagedFighters) {
+		for _, v := range m.engagedFighters {
+			if v.health > 0 {
+				canFight = true
+			} else {
+				canFight = false
+				break
+			}
+		}
+	}
+	return canFight
 }
 
 // TODO Remove fighter from list
@@ -74,15 +98,8 @@ func HeroesVsVillains() {
 	PrintStats(villains, "-- Villains --")
 }
 
-func BossFight() {
+func Test() {
 	fmt.Println("\nTesting out a Boss Character idea")
-	// TODO New Direction
-	// Create a list of BossCharacters
-	// Start Go routines to send heroes to fight the bosses
-	// Engage heroes with boss characters if the capacity is not full
-	// Fight until death and then continue iterating over boss array until one side has won
-	// When heroes free up send them on to fight again after they recover some amount of health
-
 	ch := make(chan string)
 
 	fmt.Println(testBoss.character.name)
@@ -118,6 +135,14 @@ func BossFight() {
 	for _, v := range majorVillains.list {
 		fmt.Printf("Boss Name: %v Capacity: %v\n", v.character.name, v.fighterList.capacity)
 	}
+}
+
+func BossFight() {
+	// TODO New Direction
+	// Start Go routines to send heroes to fight the bosses
+	// Engage heroes with boss characters if the capacity is not full
+	// Fight until death and then continue iterating over boss array until one side has won
+	// When heroes free up send them on to fight again after they recover some amount of health
 
 	c := make([]chan string, numHeroes)
 
@@ -136,7 +161,8 @@ func BossFight() {
 }
 
 func main() {
-	HeroesVsVillains()
+	//HeroesVsVillains()
+	//Test()
 	BossFight()
 }
 
@@ -170,19 +196,13 @@ func SaveTheWorld(i, n int, hero *Character, villainList []*Character, c chan st
 
 func (boss BossCharacter) Fight(c chan string) {
 	defer close(c)
-	if len(boss.fighterList.engagedFighters) == boss.fighterList.capacity {
+	if boss.fighterList.CanFight() {
 		for _, v := range boss.fighterList.engagedFighters {
 			Battle(v, boss.character, c)
 			Battle(boss.character, v, c)
 		}
 	} else {
 		c <- fmt.Sprint("The fight cannot commence yet.")
-	}
-}
-
-func (boss BossCharacter) Engage(c *Character) {
-	if len(boss.fighterList.engagedFighters) < boss.fighterList.capacity {
-		testBoss.fighterList.engagedFighters = append(testBoss.fighterList.engagedFighters, c)
 	}
 }
 
@@ -201,6 +221,19 @@ func CalculateDamage(i int) (damage int) {
 	n := nBig.Int64()
 	//fmt.Printf("Here is a random %T in [0,%v) : %d\n", n, n, i)
 	return int(n)
+}
+
+func (c BossCharacterList) IsDefeated() bool {
+	var isBattleOver = false
+	for _, v := range c.list {
+		if v.character.health <= 0 {
+			isBattleOver = true
+		} else {
+			isBattleOver = false
+			break
+		}
+	}
+	return isBattleOver
 }
 
 type Character struct {
@@ -232,7 +265,7 @@ var testBoss = BossCharacter{
 	},
 	SafeEngagedList{
 		engagedFighters: make([]*Character, 0),
-		capacity:        2,
+		capacity:        1,
 	},
 }
 var majorVillains = BossCharacterList{
@@ -258,7 +291,7 @@ var majorVillains = BossCharacterList{
 			},
 			SafeEngagedList{
 				engagedFighters: make([]*Character, 0),
-				capacity:        4,
+				capacity:        2,
 			},
 		},
 	},
