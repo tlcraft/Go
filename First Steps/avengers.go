@@ -10,11 +10,9 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	"runtime"
 	"sync"
 )
 
-var numCPU = runtime.NumCPU()
 var numHeroes = len(heroes.list)
 var numVillains = len(villains.list)
 var numBosses = len(majorVillains.list)
@@ -59,13 +57,6 @@ func (m *SafeEngagedList) CanFight() bool {
 }
 
 // TODO Remove fighter from list
-
-func PrintStats(c CharacterList, header string) {
-	fmt.Println(header)
-	for _, v := range c.list {
-		fmt.Printf("Name: %v\n\tAttack Power: %v\n\tDefense: %v\n\tHealth: %v\n", v.name, v.attackPower, v.defense, v.health)
-	}
-}
 
 func HeroesVsVillains() {
 	PrintStats(heroes, "** Heroes **")
@@ -194,15 +185,10 @@ func SaveTheWorld(i, n int, hero *Character, villainList []*Character, c chan st
 	}
 }
 
-func (boss BossCharacter) Fight(c chan string) {
-	defer close(c)
-	if boss.fighterList.CanFight() {
-		for _, v := range boss.fighterList.engagedFighters {
-			Battle(v, boss.character, c)
-			Battle(boss.character, v, c)
-		}
-	} else {
-		c <- fmt.Sprint("The fight cannot commence yet.")
+func PrintStats(c CharacterList, header string) {
+	fmt.Println(header)
+	for _, v := range c.list {
+		fmt.Printf("Name: %v\n\tAttack Power: %v\n\tDefense: %v\n\tHealth: %v\n", v.name, v.attackPower, v.defense, v.health)
 	}
 }
 
@@ -223,17 +209,29 @@ func CalculateDamage(i int) (damage int) {
 	return int(n)
 }
 
-func (c BossCharacterList) IsDefeated() bool {
-	var isBattleOver = false
+func (c BossCharacterList) AllBossesDefeated() bool {
+	var isDefeated = false
 	for _, v := range c.list {
 		if v.character.health <= 0 {
-			isBattleOver = true
+			isDefeated = true
 		} else {
-			isBattleOver = false
+			isDefeated = false
 			break
 		}
 	}
-	return isBattleOver
+	return isDefeated
+}
+
+func (boss BossCharacter) Fight(c chan string) {
+	defer close(c)
+	if boss.fighterList.CanFight() {
+		for _, v := range boss.fighterList.engagedFighters {
+			Battle(v, boss.character, c)
+			Battle(boss.character, v, c)
+		}
+	} else {
+		c <- fmt.Sprint("The fight cannot commence yet.")
+	}
 }
 
 type Character struct {
@@ -259,7 +257,7 @@ type CharacterList struct {
 var testBoss = BossCharacter{
 	&Character{
 		name:        "Sabretooth",
-		attackPower: 35,
+		attackPower: 10,
 		defense:     55,
 		health:      90,
 	},
@@ -294,6 +292,18 @@ var majorVillains = BossCharacterList{
 				capacity:        2,
 			},
 		},
+		&BossCharacter{
+			&Character{
+				name:        "Sabretooth",
+				attackPower: 10,
+				defense:     55,
+				health:      90,
+			},
+			SafeEngagedList{
+				engagedFighters: make([]*Character, 0),
+				capacity:        1,
+			},
+		},
 	},
 }
 
@@ -316,6 +326,18 @@ var heroes = CharacterList{
 			attackPower: 10,
 			defense:     30,
 			health:      50,
+		},
+		&Character{
+			name:        "Captain Marvel",
+			attackPower: 25,
+			defense:     65,
+			health:      110,
+		},
+		&Character{
+			name:        "Wolverine",
+			attackPower: 30,
+			defense:     60,
+			health:      100,
 		},
 	},
 }
