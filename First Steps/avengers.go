@@ -17,7 +17,25 @@ var numHeroes = len(heroes.list)
 var numVillains = len(villains.list)
 var numBosses = len(majorVillains.list)
 
-// Keeps track of which villains have been fought
+type SafeIsEngaged struct {
+	isEngaged bool
+	mux       sync.Mutex
+}
+
+func (m *SafeIsEngaged) MarkIsEngaged(e bool) {
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	m.isEngaged = e
+}
+
+func (m *SafeIsEngaged) CanEngage() bool {
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	return m.isEngaged
+}
+
 type SafeEngagedList struct {
 	engagedFighters []*Character
 	capacity        int
@@ -161,14 +179,11 @@ func EngageWithBoss(i, n int, hero *Character, bossList []*BossCharacter, c chan
 	defer close(c)
 
 	// Notes / Ideas
-	// for each boss
-	// engage boss
-	// fight until a character is defeated
-	// if hero dies return
-	// if a boss dies move onto the next boss
-
-	// one go routing should add heroes to boss slices
-	// another should iterate over the boss array and fight when the capacity is full
+	// while the heroes and villains are not all defeated
+	// 		for each villain
+	// 			if they are still alive
+	// 				send the next available hero to fight them
+	// 		then loop over and have all the characters fight
 }
 
 func SaveTheWorld(i, n int, hero *Character, villainList []*Character, c chan string) {
