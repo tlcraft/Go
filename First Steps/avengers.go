@@ -153,17 +153,29 @@ func BossFight() {
 	// Fight until death and then continue iterating over boss array until one side has won
 	// When heroes free up send them on to fight again after they recover some amount of health
 
-	c := make([]chan string, numHeroes)
-
 	fmt.Println("BOSS FIGHT!\n")
 
-	for i, _ := range heroes.list {
-		c[i] = make(chan string)
-		go EngageWithBoss(i*numBosses/numHeroes, (i+1)*numBosses/numHeroes, heroes.list[i], majorVillains.list, c[i])
-	}
+	for !majorVillains.AllBossesDefeated() && !heroCharacters.AllHeroesDefeated() {
+		var c = make(chan string)
 
-	for i := range c {
-		for s := range c[i] {
+		// Assign heroes to villains
+		for _, v := range majorVillains.list {
+			if v.character.health > 0 {
+				nextHero, err := heroCharacters.NextHero()
+				if err == nil {
+					v.fighterList.Add(nextHero)
+				} else {
+					break
+				}
+			}
+		}
+
+		// Fight!
+		for _, v := range majorVillains.list {
+			v.Fight(c)
+		}
+
+		for s := range c {
 			fmt.Println(s)
 		}
 	}
@@ -171,19 +183,12 @@ func BossFight() {
 
 func main() {
 	//HeroesVsVillains()
-	//Test()
-	BossFight()
+	Test()
+	//BossFight()
 }
 
-func EngageWithBoss(i, n int, hero *Character, bossList []*BossCharacter, c chan string) {
+func EngageWithBoss(i, n int, heroList *HeroCharacterList, bossList []*BossCharacter, c chan string) {
 	defer close(c)
-
-	// Notes / Ideas
-	// while the heroes and villains are not all defeated
-	// 		for each villain
-	// 			if they are still alive
-	// 				send the next available hero to fight them
-	// 		then loop over and have all the characters fight
 }
 
 func SaveTheWorld(i, n int, hero *Character, villainList []*Character, c chan string) {
@@ -249,11 +254,54 @@ func (boss BossCharacter) Fight(c chan string) {
 	}
 }
 
+func (h HeroCharacterList) NextHero() (*Character, error) {
+	for _, v := range h.list {
+		if v.engaged.CanEngage() == false {
+			v.engaged.MarkIsEngaged(true)
+			return v.character, nil
+		}
+	}
+
+	return &Character{}, GameError("No character is available to fight")
+}
+
+func (c HeroCharacterList) AllHeroesDefeated() bool {
+	var isDefeated = false
+	for _, v := range c.list {
+		if v.character.health <= 0 {
+			isDefeated = true
+		} else {
+			isDefeated = false
+			break
+		}
+	}
+	return isDefeated
+}
+
+type GameError string
+
+func (e GameError) Error() string {
+	return string(e)
+}
+
 type Character struct {
 	name        string
 	attackPower int
 	defense     int
 	health      int
+}
+
+type CharacterList struct {
+	list []*Character
+}
+
+type HeroCharacter struct {
+	character *Character
+	engaged   SafeIsEngaged
+}
+
+type HeroCharacterList struct {
+	list []*HeroCharacter
 }
 
 type BossCharacter struct {
@@ -263,10 +311,6 @@ type BossCharacter struct {
 
 type BossCharacterList struct {
 	list []*BossCharacter
-}
-
-type CharacterList struct {
-	list []*Character
 }
 
 var testBoss = BossCharacter{
@@ -353,6 +397,66 @@ var heroes = CharacterList{
 			attackPower: 30,
 			defense:     60,
 			health:      100,
+		},
+	},
+}
+
+var heroCharacters = HeroCharacterList{
+	[]*HeroCharacter{
+		&HeroCharacter{
+			&Character{
+				name:        "Thor",
+				attackPower: 20,
+				defense:     50,
+				health:      70,
+			},
+			SafeIsEngaged{
+				isEngaged: false,
+			},
+		},
+		&HeroCharacter{
+			&Character{
+				name:        "Iron Man",
+				attackPower: 15,
+				defense:     45,
+				health:      60,
+			},
+			SafeIsEngaged{
+				isEngaged: false,
+			},
+		},
+		&HeroCharacter{
+			&Character{
+				name:        "Spider-Man",
+				attackPower: 10,
+				defense:     30,
+				health:      50,
+			},
+			SafeIsEngaged{
+				isEngaged: false,
+			},
+		},
+		&HeroCharacter{
+			&Character{
+				name:        "Captain Marvel",
+				attackPower: 25,
+				defense:     65,
+				health:      110,
+			},
+			SafeIsEngaged{
+				isEngaged: false,
+			},
+		},
+		&HeroCharacter{
+			&Character{
+				name:        "Wolverine",
+				attackPower: 30,
+				defense:     60,
+				health:      100,
+			},
+			SafeIsEngaged{
+				isEngaged: false,
+			},
 		},
 	},
 }
