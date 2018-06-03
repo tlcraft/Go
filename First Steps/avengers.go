@@ -144,6 +144,54 @@ func Test() {
 	for _, v := range majorVillains.list {
 		fmt.Printf("Boss Name: %v Capacity: %v\n", v.character.name, v.fighterList.capacity)
 	}
+
+	BossesAllDefeatedTest()
+	HeroesAllDefeatedTest()
+}
+
+func BossesAllDefeatedTest() {
+	var bossListTest = BossCharacterList{
+		[]*BossCharacter{
+			&BossCharacter{
+				&Character{
+					name:        "BossTest",
+					attackPower: 25,
+					defense:     100,
+					health:      200,
+				},
+				SafeEngagedList{
+					engagedFighters: make([]*Character, 0),
+					capacity:        4,
+				},
+			},
+		},
+	}
+
+	fmt.Println("Are all the bosses defeated?", bossListTest.AllBossesDefeated())
+	bossListTest.list[0].character.health = 0
+	fmt.Println("Are all the bosses defeated?", bossListTest.AllBossesDefeated())
+}
+
+func HeroesAllDefeatedTest() {
+	var heroListTest = HeroCharacterList{
+		[]*HeroCharacter{
+			&HeroCharacter{
+				&Character{
+					name:        "HeroTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+		},
+	}
+
+	fmt.Println("Are all the heroes defeated?", heroListTest.AllHeroesDefeated())
+	heroListTest.list[0].character.health = 0
+	fmt.Println("Are all the heroes defeated?", heroListTest.AllHeroesDefeated())
 }
 
 func BossFight() {
@@ -325,6 +373,7 @@ var testBoss = BossCharacter{
 		capacity:        1,
 	},
 }
+
 var majorVillains = BossCharacterList{
 	[]*BossCharacter{
 		&BossCharacter{
