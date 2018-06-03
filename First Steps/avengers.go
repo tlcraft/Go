@@ -287,7 +287,7 @@ func BossFight() {
 
 	fmt.Println("BOSS FIGHT!\n")
 
-	for EndGame(majorVillains, heroCharacters) {
+	for !EndGame(majorVillains, heroCharacters) {
 		var c = make(chan string)
 
 		// Assign heroes to villains
@@ -311,6 +311,9 @@ func BossFight() {
 			fmt.Println(s)
 		}
 	}
+
+	fmt.Println("Bosses defeated?", majorVillains.AllBossesDefeated())
+	fmt.Println("Heroes defeated?", heroCharacters.AllHeroesDefeated())
 }
 
 func main() {
