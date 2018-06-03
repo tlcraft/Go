@@ -147,9 +147,92 @@ func Test() {
 
 	BossesAllDefeatedTest()
 	HeroesAllDefeatedTest()
+	EndGameBossTest()
+	EndGameHeroTest()
+}
+
+func EndGameBossTest() {
+	fmt.Println("EndGameBossTest")
+	var bossListTest = BossCharacterList{
+		[]*BossCharacter{
+			&BossCharacter{
+				&Character{
+					name:        "BossTest",
+					attackPower: 25,
+					defense:     100,
+					health:      200,
+				},
+				SafeEngagedList{
+					engagedFighters: make([]*Character, 0),
+					capacity:        4,
+				},
+			},
+		},
+	}
+
+	var heroListTest = HeroCharacterList{
+		[]*HeroCharacter{
+			&HeroCharacter{
+				&Character{
+					name:        "HeroTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+		},
+	}
+
+	fmt.Println("Is the game over?", EndGame(bossListTest, heroListTest))
+	bossListTest.list[0].character.health = 0
+	fmt.Println("Is the game over?", EndGame(bossListTest, heroListTest))
+}
+
+func EndGameHeroTest() {
+	fmt.Println("EndGameHeroTest")
+	var bossListTest = BossCharacterList{
+		[]*BossCharacter{
+			&BossCharacter{
+				&Character{
+					name:        "BossTest",
+					attackPower: 25,
+					defense:     100,
+					health:      200,
+				},
+				SafeEngagedList{
+					engagedFighters: make([]*Character, 0),
+					capacity:        4,
+				},
+			},
+		},
+	}
+
+	var heroListTest = HeroCharacterList{
+		[]*HeroCharacter{
+			&HeroCharacter{
+				&Character{
+					name:        "HeroTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+		},
+	}
+
+	fmt.Println("Is the game over?", EndGame(bossListTest, heroListTest))
+	heroListTest.list[0].character.health = 0
+	fmt.Println("Is the game over?", EndGame(bossListTest, heroListTest))
 }
 
 func BossesAllDefeatedTest() {
+	fmt.Println("BossesAllDefeatedTest")
 	var bossListTest = BossCharacterList{
 		[]*BossCharacter{
 			&BossCharacter{
@@ -173,6 +256,7 @@ func BossesAllDefeatedTest() {
 }
 
 func HeroesAllDefeatedTest() {
+	fmt.Println("HeroesAllDefeatedTest")
 	var heroListTest = HeroCharacterList{
 		[]*HeroCharacter{
 			&HeroCharacter{
@@ -203,7 +287,7 @@ func BossFight() {
 
 	fmt.Println("BOSS FIGHT!\n")
 
-	for !majorVillains.AllBossesDefeated() && !heroCharacters.AllHeroesDefeated() {
+	for EndGame(majorVillains, heroCharacters) {
 		var c = make(chan string)
 
 		// Assign heroes to villains
@@ -324,6 +408,18 @@ func (c HeroCharacterList) AllHeroesDefeated() bool {
 		}
 	}
 	return isDefeated
+}
+
+func EndGame(b BossCharacterList, h HeroCharacterList) bool {
+	if b.AllBossesDefeated() {
+		return true
+	}
+
+	if h.AllHeroesDefeated() {
+		return true
+	}
+
+	return false
 }
 
 type GameError string
