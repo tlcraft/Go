@@ -288,7 +288,7 @@ func BossFight() {
 	fmt.Println("BOSS FIGHT!\n")
 
 	for !EndGame(majorVillains, heroCharacters) {
-		var c = make(chan string)
+		var c = make([]chan string, len(majorVillains.list))
 
 		// Assign heroes to villains
 		for _, v := range majorVillains.list {
@@ -301,14 +301,18 @@ func BossFight() {
 				}
 			}
 		}
+		//TODO fill a boss to capacity before moving to the next boss
 
 		// Fight!
-		for _, v := range majorVillains.list {
-			v.Fight(c)
+		for i, v := range majorVillains.list {
+			c[i] = make(chan string)
+			go v.Fight(c[i])
 		}
 
-		for s := range c {
-			fmt.Println(s)
+		for i := range c {
+			for s := range c[i] {
+				fmt.Println(s)
+			}
 		}
 	}
 
@@ -318,8 +322,8 @@ func BossFight() {
 
 func main() {
 	//HeroesVsVillains()
-	Test()
-	//BossFight()
+	//Test()
+	BossFight()
 }
 
 func EngageWithBoss(i, n int, heroList *HeroCharacterList, bossList []*BossCharacter, c chan string) {
