@@ -37,12 +37,12 @@ func (m *SafeIsEngaged) IsEngaged() bool {
 }
 
 type SafeEngagedList struct {
-	engagedFighters []*Character
+	engagedFighters []*HeroCharacter
 	capacity        int
 	mux             sync.Mutex
 }
 
-func (m *SafeEngagedList) Add(fighter *Character) bool {
+func (m *SafeEngagedList) Add(fighter *HeroCharacter) bool {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
@@ -63,7 +63,7 @@ func (m *SafeEngagedList) CanFight() bool {
 	var canFight = false
 	if m.capacity == len(m.engagedFighters) {
 		for _, v := range m.engagedFighters {
-			if v.health > 0 {
+			if v.character.health > 0 {
 				canFight = true
 			} else {
 				canFight = false
@@ -74,7 +74,15 @@ func (m *SafeEngagedList) CanFight() bool {
 	return canFight
 }
 
-// TODO Remove fighter from list
+func (b BossCharacterList) Disengage() {
+	for _, v := range b.list {
+		if v.character.health <= 0 {
+			for _, v := range v.fighterList.engagedFighters {
+				v.engaged.MarkIsEngaged(false)
+			}
+		}
+	}
+}
 
 func HeroesVsVillains() {
 	PrintStats(heroes, "** Heroes **")
@@ -113,24 +121,35 @@ func Test() {
 
 	fmt.Println(testBoss.character.name)
 	fmt.Println(len(testBoss.fighterList.engagedFighters))
-	testBoss.fighterList.Add(&Character{
-		name:        "Wolverine",
-		attackPower: 30,
-		defense:     60,
-		health:      100,
+	testBoss.fighterList.Add(&HeroCharacter{
+		&Character{
+			name:        "Wolverine",
+			attackPower: 30,
+			defense:     60,
+			health:      100,
+		},
+		SafeIsEngaged{
+			isEngaged: false,
+		},
 	})
+
 	fmt.Println(len(testBoss.fighterList.engagedFighters))
-	fmt.Println(testBoss.fighterList.engagedFighters[0].name)
+	fmt.Println(testBoss.fighterList.engagedFighters[0].character.name)
 	go testBoss.Fight(ch)
 	for s := range ch {
 		fmt.Println(s)
 	}
 
-	testBoss.fighterList.Add(&Character{
-		name:        "Captain Marvel",
-		attackPower: 25,
-		defense:     65,
-		health:      110,
+	testBoss.fighterList.Add(&HeroCharacter{
+		&Character{
+			name:        "Captain Marvel",
+			attackPower: 25,
+			defense:     65,
+			health:      110,
+		},
+		SafeIsEngaged{
+			isEngaged: false,
+		},
 	})
 	fmt.Println(len(testBoss.fighterList.engagedFighters))
 
@@ -167,7 +186,7 @@ func EndGameBossTest() {
 					health:      200,
 				},
 				SafeEngagedList{
-					engagedFighters: make([]*Character, 0),
+					engagedFighters: make([]*HeroCharacter, 0),
 					capacity:        4,
 				},
 			},
@@ -207,7 +226,7 @@ func EndGameHeroTest() {
 					health:      200,
 				},
 				SafeEngagedList{
-					engagedFighters: make([]*Character, 0),
+					engagedFighters: make([]*HeroCharacter, 0),
 					capacity:        4,
 				},
 			},
@@ -247,7 +266,7 @@ func EndGameHeroMultiTest() {
 					health:      200,
 				},
 				SafeEngagedList{
-					engagedFighters: make([]*Character, 0),
+					engagedFighters: make([]*HeroCharacter, 0),
 					capacity:        4,
 				},
 			},
@@ -259,7 +278,7 @@ func EndGameHeroMultiTest() {
 					health:      200,
 				},
 				SafeEngagedList{
-					engagedFighters: make([]*Character, 0),
+					engagedFighters: make([]*HeroCharacter, 0),
 					capacity:        4,
 				},
 			},
@@ -303,7 +322,7 @@ func BossesAllDefeatedTest() {
 					health:      200,
 				},
 				SafeEngagedList{
-					engagedFighters: make([]*Character, 0),
+					engagedFighters: make([]*HeroCharacter, 0),
 					capacity:        4,
 				},
 			},
@@ -327,7 +346,7 @@ func BossesAllDefeatedMultiTest() {
 					health:      200,
 				},
 				SafeEngagedList{
-					engagedFighters: make([]*Character, 0),
+					engagedFighters: make([]*HeroCharacter, 0),
 					capacity:        4,
 				},
 			},
@@ -339,7 +358,7 @@ func BossesAllDefeatedMultiTest() {
 					health:      200,
 				},
 				SafeEngagedList{
-					engagedFighters: make([]*Character, 0),
+					engagedFighters: make([]*HeroCharacter, 0),
 					capacity:        4,
 				},
 			},
@@ -450,6 +469,8 @@ func BossFight() {
 				fmt.Println(s)
 			}
 		}
+
+		majorVillains.Disengage()
 	}
 
 	fmt.Println("Bosses defeated?", majorVillains.AllBossesDefeated())
@@ -521,23 +542,23 @@ func (boss BossCharacter) Fight(c chan string) {
 	defer close(c)
 	if boss.fighterList.CanFight() {
 		for _, v := range boss.fighterList.engagedFighters {
-			Battle(v, boss.character, c)
-			Battle(boss.character, v, c)
+			Battle(v.character, boss.character, c)
+			Battle(boss.character, v.character, c)
 		}
 	} else {
 		c <- fmt.Sprint("The fight cannot commence yet.")
 	}
 }
 
-func (h HeroCharacterList) NextHero() (*Character, error) {
+func (h HeroCharacterList) NextHero() (*HeroCharacter, error) {
 	for _, v := range h.list {
 		if v.engaged.IsEngaged() == false {
 			v.engaged.MarkIsEngaged(true)
-			return v.character, nil
+			return v, nil
 		}
 	}
 
-	return &Character{}, GameError("No character is available to fight")
+	return &HeroCharacter{}, GameError("No hero is available to fight")
 }
 
 func (c HeroCharacterList) AllHeroesDefeated() bool {
@@ -608,7 +629,7 @@ var testBoss = BossCharacter{
 		health:      90,
 	},
 	SafeEngagedList{
-		engagedFighters: make([]*Character, 0),
+		engagedFighters: make([]*HeroCharacter, 0),
 		capacity:        1,
 	},
 }
@@ -623,7 +644,7 @@ var majorVillains = BossCharacterList{
 				health:      200,
 			},
 			SafeEngagedList{
-				engagedFighters: make([]*Character, 0),
+				engagedFighters: make([]*HeroCharacter, 0),
 				capacity:        4,
 			},
 		},
@@ -635,7 +656,7 @@ var majorVillains = BossCharacterList{
 				health:      150,
 			},
 			SafeEngagedList{
-				engagedFighters: make([]*Character, 0),
+				engagedFighters: make([]*HeroCharacter, 0),
 				capacity:        2,
 			},
 		},
@@ -647,7 +668,7 @@ var majorVillains = BossCharacterList{
 				health:      90,
 			},
 			SafeEngagedList{
-				engagedFighters: make([]*Character, 0),
+				engagedFighters: make([]*HeroCharacter, 0),
 				capacity:        1,
 			},
 		},
