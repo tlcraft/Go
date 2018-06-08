@@ -172,6 +172,8 @@ func Test() {
 	BossesAllDefeatedMultiTest()
 	HeroesAllDefeatedMultiTest()
 	EndGameHeroMultiTest()
+
+	DisengageTest()
 }
 
 func EndGameBossTest() {
@@ -431,6 +433,63 @@ func HeroesAllDefeatedMultiTest() {
 	fmt.Println("Are all the heroes defeated?", heroListTest.AllHeroesDefeated())
 }
 
+func DisengageTest() {
+	fmt.Println("DisengageTest")
+	var bossListTest = BossCharacterList{
+		[]*BossCharacter{
+			&BossCharacter{
+				&Character{
+					name:        "BossTest",
+					attackPower: 25,
+					defense:     100,
+					health:      200,
+				},
+				SafeEngagedList{
+					engagedFighters: make([]*HeroCharacter, 0),
+					capacity:        4,
+				},
+			},
+		},
+	}
+
+	var heroListTest = HeroCharacterList{
+		[]*HeroCharacter{
+			&HeroCharacter{
+				&Character{
+					name:        "HeroTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+			&HeroCharacter{
+				&Character{
+					name:        "HeroMultiTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+		},
+	}
+
+	hero, err := heroListTest.NextHero()
+	if err == nil {
+		fmt.Println("Next hero is", hero.character.name)
+		bossListTest.list[0].fighterList.Add(hero)
+		fmt.Println("Hero is now engage to fight?", hero.engaged.IsEngaged())
+		bossListTest.Disengage()
+		fmt.Println("Hero is free to engage?", hero.engaged.IsEngaged())
+		fmt.Println("Hero is free to engage?", heroListTest.list[0].engaged.IsEngaged())
+	}
+}
+
 func BossFight() {
 	// TODO New Direction
 	// Start Go routines to send heroes to fight the bosses
@@ -479,8 +538,8 @@ func BossFight() {
 
 func main() {
 	//HeroesVsVillains()
-	//Test()
-	BossFight()
+	Test()
+	//BossFight()
 }
 
 func EngageWithBoss(i, n int, heroList *HeroCharacterList, bossList []*BossCharacter, c chan string) {
