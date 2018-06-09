@@ -50,6 +50,7 @@ func (m *SafeEngagedList) Add(fighter *HeroCharacter) bool {
 
 	if len(m.engagedFighters) < m.capacity {
 		m.engagedFighters = append(m.engagedFighters, fighter)
+		fighter.engaged.MarkIsEngaged(true)
 		isAdded = true
 	}
 
@@ -482,11 +483,17 @@ func DisengageTest() {
 	hero, err := heroListTest.NextHero()
 	if err == nil {
 		fmt.Println("Next hero is", hero.character.name)
+		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
 		bossListTest.list[0].fighterList.Add(hero)
-		fmt.Println("Hero is now engage to fight?", hero.engaged.IsEngaged())
+		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
 		bossListTest.Disengage()
-		fmt.Println("Hero is free to engage?", hero.engaged.IsEngaged())
-		fmt.Println("Hero is free to engage?", heroListTest.list[0].engaged.IsEngaged())
+		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
+		fmt.Println("Is the hero engaged in a fight?", heroListTest.list[0].engaged.IsEngaged())
+
+		bossListTest.list[0].character.health = 0
+		bossListTest.Disengage()
+		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
+		fmt.Println("Is the hero engaged in a fight?", heroListTest.list[0].engaged.IsEngaged())
 	}
 }
 
@@ -612,7 +619,6 @@ func (boss BossCharacter) Fight(c chan string) {
 func (h HeroCharacterList) NextHero() (*HeroCharacter, error) {
 	for _, v := range h.list {
 		if v.engaged.IsEngaged() == false {
-			v.engaged.MarkIsEngaged(true)
 			return v, nil
 		}
 	}
