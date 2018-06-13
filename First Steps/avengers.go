@@ -78,8 +78,14 @@ func (m *SafeEngagedList) CanFight() bool {
 func (b BossCharacterList) Disengage() {
 	for _, v := range b.list {
 		if v.character.health <= 0 {
-			for _, v := range v.fighterList.engagedFighters {
-				v.engaged.MarkIsEngaged(false)
+			for _, f := range v.fighterList.engagedFighters {
+				f.engaged.MarkIsEngaged(false)
+			}
+		} else {
+			for _, f := range v.fighterList.engagedFighters {
+				if f.character.health <= 0 {
+					f.engaged.MarkIsEngaged(false)
+				}
 			}
 		}
 	}
@@ -105,10 +111,8 @@ func HeroesVsVillains() {
 	}
 	// TODO Ideas
 	// incorporate advantages and disadvantages for each character
-	// teaming up against villains (villain "hero capacity")
 	// special attacks
 	// Randomly add general enemies to a slice which the heroes iterate over and fight
-	// while at least one hero is alive and enemies remain
 	// print living heroes and villains
 
 	fmt.Println("\nFinal Stats")
@@ -117,6 +121,22 @@ func HeroesVsVillains() {
 }
 
 func Test() {
+	BossCharacterTest()
+
+	BossesAllDefeatedTest()
+	HeroesAllDefeatedTest()
+	EndGameBossTest()
+	EndGameHeroTest()
+
+	BossesAllDefeatedMultiTest()
+	HeroesAllDefeatedMultiTest()
+	EndGameHeroMultiTest()
+
+	DisengageBossDeathTest()
+	DisengageHeroDeathTest()
+}
+
+func BossCharacterTest() {
 	fmt.Println("\nTesting out a Boss Character idea")
 	ch := make(chan string)
 
@@ -164,17 +184,6 @@ func Test() {
 	for _, v := range majorVillains.list {
 		fmt.Printf("Boss Name: %v Capacity: %v\n", v.character.name, v.fighterList.capacity)
 	}
-
-	BossesAllDefeatedTest()
-	HeroesAllDefeatedTest()
-	EndGameBossTest()
-	EndGameHeroTest()
-
-	BossesAllDefeatedMultiTest()
-	HeroesAllDefeatedMultiTest()
-	EndGameHeroMultiTest()
-
-	DisengageTest()
 }
 
 func EndGameBossTest() {
@@ -434,8 +443,8 @@ func HeroesAllDefeatedMultiTest() {
 	fmt.Println("Are all the heroes defeated?", heroListTest.AllHeroesDefeated())
 }
 
-func DisengageTest() {
-	fmt.Println("DisengageTest")
+func DisengageBossDeathTest() {
+	fmt.Println("DisengageBossDeathTest")
 	var bossListTest = BossCharacterList{
 		[]*BossCharacter{
 			&BossCharacter{
@@ -487,21 +496,82 @@ func DisengageTest() {
 		bossListTest.list[0].fighterList.Add(hero)
 		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
 		bossListTest.Disengage()
-		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
-		fmt.Println("Is the hero engaged in a fight?", heroListTest.list[0].engaged.IsEngaged())
+		fmt.Println("Is the hero still engaged in a fight (object)?", hero.engaged.IsEngaged())
+		fmt.Println("Is the hero still engaged in a fight (array)?", heroListTest.list[0].engaged.IsEngaged())
 
 		bossListTest.list[0].character.health = 0
 		bossListTest.Disengage()
+		fmt.Println("Is the hero engaged in a fight now (object)", hero.engaged.IsEngaged())
+		fmt.Println("Is the hero engaged in a fight now (array)?", heroListTest.list[0].engaged.IsEngaged())
+	}
+}
+
+func DisengageHeroDeathTest() {
+	fmt.Println("DisengageHeroDeathTest")
+	var bossListTest = BossCharacterList{
+		[]*BossCharacter{
+			&BossCharacter{
+				&Character{
+					name:        "BossTest",
+					attackPower: 25,
+					defense:     100,
+					health:      200,
+				},
+				SafeEngagedList{
+					engagedFighters: make([]*HeroCharacter, 0),
+					capacity:        2,
+				},
+			},
+		},
+	}
+
+	var heroListTest = HeroCharacterList{
+		[]*HeroCharacter{
+			&HeroCharacter{
+				&Character{
+					name:        "HeroTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+			&HeroCharacter{
+				&Character{
+					name:        "HeroMultiTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+		},
+	}
+
+	hero, err := heroListTest.NextHero()
+	if err == nil {
+		fmt.Println("Next hero is", hero.character.name)
 		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
-		fmt.Println("Is the hero engaged in a fight?", heroListTest.list[0].engaged.IsEngaged())
+		bossListTest.list[0].fighterList.Add(hero)
+		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
+		bossListTest.Disengage()
+		fmt.Println("Is the hero still engaged in a fight (object)?", hero.engaged.IsEngaged())
+		fmt.Println("Is the hero still engaged in a fight (array)?", heroListTest.list[0].engaged.IsEngaged())
+
+		heroListTest.list[0].character.health = 0
+		bossListTest.Disengage()
+		fmt.Println("Is the hero engaged in a fight now (object)", hero.engaged.IsEngaged())
+		fmt.Println("Is the hero engaged in a fight now (array)?", heroListTest.list[0].engaged.IsEngaged())
 	}
 }
 
 func BossFight() {
-	// TODO New Direction
+	// TODO
 	// Start Go routines to send heroes to fight the bosses
-	// Engage heroes with boss characters if the capacity is not full
-	// Fight until death and then continue iterating over boss array until one side has won
 	// When heroes free up send them on to fight again after they recover some amount of health
 
 	fmt.Println("BOSS FIGHT!\n")
