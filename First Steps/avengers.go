@@ -75,6 +75,21 @@ func (m *SafeEngagedList) CanFight() bool {
 	return canFight
 }
 
+func (m *SafeEngagedList) RemoveFighter(hero *HeroCharacter) {
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	for i, v := range m.engagedFighters {
+		if v == hero {
+			// Remove from list
+			// https://stackoverflow.com/a/37335777/8094831
+			m.engagedFighters[len(m.engagedFighters)-1], m.engagedFighters[i] = m.engagedFighters[i], m.engagedFighters[len(m.engagedFighters)-1]
+			m.engagedFighters = m.engagedFighters[:len(m.engagedFighters)-1]
+			break
+		}
+	}
+}
+
 func (b BossCharacterList) Disengage() {
 	for _, v := range b.list {
 		if v.character.health <= 0 {
@@ -82,7 +97,7 @@ func (b BossCharacterList) Disengage() {
 			for _, f := range v.fighterList.engagedFighters {
 				if f.character.health > 0 {
 					f.engaged.MarkIsEngaged(false)
-					//TODO remove fighters from array
+					v.fighterList.RemoveFighter(f)
 					fmt.Println(f.character.name, "is free for battle!")
 				}
 			}
@@ -90,7 +105,7 @@ func (b BossCharacterList) Disengage() {
 			for _, f := range v.fighterList.engagedFighters {
 				if f.character.health <= 0 {
 					f.engaged.MarkIsEngaged(false)
-					//TODO remove fighter from array
+					v.fighterList.RemoveFighter(f)
 					fmt.Println(f.character.name, "is dead")
 				}
 			}
@@ -519,12 +534,16 @@ func DisengageBossDeathTest() {
 		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
 		bossListTest.list[0].fighterList.Add(hero)
 		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
+		fmt.Println("Number of engaged heroes before:", len(bossListTest.list[0].fighterList.engagedFighters))
 		bossListTest.Disengage()
+		fmt.Println("Number of engaged heroes after:", len(bossListTest.list[0].fighterList.engagedFighters))
 		fmt.Println("Is the hero still engaged in a fight (object)?", hero.engaged.IsEngaged())
 		fmt.Println("Is the hero still engaged in a fight (array)?", heroListTest.list[0].engaged.IsEngaged())
 
 		bossListTest.list[0].character.health = 0
+		fmt.Println("Number of engaged heroes before:", len(bossListTest.list[0].fighterList.engagedFighters))
 		bossListTest.Disengage()
+		fmt.Println("Number of engaged heroes after:", len(bossListTest.list[0].fighterList.engagedFighters))
 		fmt.Println("Is the hero engaged in a fight now (object)", hero.engaged.IsEngaged())
 		fmt.Println("Is the hero engaged in a fight now (array)?", heroListTest.list[0].engaged.IsEngaged())
 	}
@@ -585,12 +604,16 @@ func DisengageHeroDeathTest() {
 		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
 		bossListTest.list[0].fighterList.Add(hero)
 		fmt.Println("Is the hero engaged in a fight?", hero.engaged.IsEngaged())
+		fmt.Println("Number of engaged heroes before:", len(bossListTest.list[0].fighterList.engagedFighters))
 		bossListTest.Disengage()
+		fmt.Println("Number of engaged heroes after:", len(bossListTest.list[0].fighterList.engagedFighters))
 		fmt.Println("Is the hero still engaged in a fight (object)?", hero.engaged.IsEngaged())
 		fmt.Println("Is the hero still engaged in a fight (array)?", heroListTest.list[0].engaged.IsEngaged())
 
 		heroListTest.list[0].character.health = 0
+		fmt.Println("Number of engaged heroes before:", len(bossListTest.list[0].fighterList.engagedFighters))
 		bossListTest.Disengage()
+		fmt.Println("Number of engaged heroes after:", len(bossListTest.list[0].fighterList.engagedFighters))
 		fmt.Println("Is the hero engaged in a fight now (object)", hero.engaged.IsEngaged())
 		fmt.Println("Is the hero engaged in a fight now (array)?", heroListTest.list[0].engaged.IsEngaged())
 	}
@@ -648,8 +671,8 @@ func BossFight() {
 
 func main() {
 	//HeroesVsVillains()
-	//Test()
-	BossFight()
+	Test()
+	//BossFight()
 }
 
 func EngageWithBoss(i, n int, heroList *HeroCharacterList, bossList []*BossCharacter, c chan string) {
