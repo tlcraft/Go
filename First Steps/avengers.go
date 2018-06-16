@@ -629,7 +629,7 @@ func BossFight() {
 
 	fmt.Println("BOSS FIGHT!\n")
 	var count int = 0 // Add a temporary short circuit
-	for !EndGame(majorVillains, heroCharacters) && count < 20 {
+	for !EndGame(majorVillains, heroCharacters) && count < 80 {
 		var c = make([]chan string, len(majorVillains.list))
 
 		// Assign heroes to villains
@@ -671,8 +671,8 @@ func BossFight() {
 
 func main() {
 	//HeroesVsVillains()
-	Test()
-	//BossFight()
+	//Test()
+	BossFight()
 }
 
 func EngageWithBoss(i, n int, heroList *HeroCharacterList, bossList []*BossCharacter, c chan string) {
@@ -971,6 +971,50 @@ var heroCharacters = HeroCharacterList{
 				attackPower: 30,
 				defense:     60,
 				health:      100,
+			},
+			SafeIsEngaged{
+				isEngaged: false,
+			},
+		},
+		&HeroCharacter{
+			&Character{
+				name:        "Deadpool",
+				attackPower: 28,
+				defense:     40,
+				health:      150,
+			},
+			SafeIsEngaged{
+				isEngaged: false,
+			},
+		},
+		&HeroCharacter{
+			&Character{
+				name:        "Black Panther",
+				attackPower: 25,
+				defense:     45,
+				health:      110,
+			},
+			SafeIsEngaged{
+				isEngaged: false,
+			},
+		},
+		&HeroCharacter{
+			&Character{
+				name:        "Hulk",
+				attackPower: 95,
+				defense:     65,
+				health:      85,
+			},
+			SafeIsEngaged{
+				isEngaged: false,
+			},
+		},
+		&HeroCharacter{
+			&Character{
+				name:        "Captain America",
+				attackPower: 30,
+				defense:     60,
+				health:      55,
 			},
 			SafeIsEngaged{
 				isEngaged: false,
