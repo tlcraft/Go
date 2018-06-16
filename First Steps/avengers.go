@@ -156,6 +156,175 @@ func Test() {
 
 	DisengageBossDeathTest()
 	DisengageHeroDeathTest()
+
+	NextHeroHealthTest()
+	NextHeroEngagedTest()
+	NextHeroMultipleHealthTest()
+	NextHeroMultipleEngagedTest()
+}
+
+func NextHeroHealthTest() {
+	fmt.Println("\n***********NextHeroHealthTest***********")
+
+	var heroListTest = HeroCharacterList{
+		[]*HeroCharacter{
+			&HeroCharacter{
+				&Character{
+					name:        "HeroTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+		},
+	}
+
+	hero, err := heroListTest.NextHero()
+
+	fmt.Println("No errors", (err == nil) == true)
+
+	nextHero, err := heroListTest.NextHero()
+
+	fmt.Println("Same hero is returned", (hero == nextHero) == true)
+
+	heroListTest.list[0].character.health = 0
+
+	anotherHero, err := heroListTest.NextHero()
+	fmt.Println("No hero is available", (err != nil) == true)
+
+	fmt.Println("Error text", err)
+
+	fmt.Println("Can't find another hero", (anotherHero == nil) == true)
+}
+
+func NextHeroEngagedTest() {
+	fmt.Println("\n***********NextHeroEngagedTest***********")
+
+	var heroListTest = HeroCharacterList{
+		[]*HeroCharacter{
+			&HeroCharacter{
+				&Character{
+					name:        "HeroTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+		},
+	}
+
+	hero, err := heroListTest.NextHero()
+
+	fmt.Println("No errors", (err == nil) == true)
+
+	nextHero, err := heroListTest.NextHero()
+
+	fmt.Println("Same hero is returned", (hero == nextHero) == true)
+
+	heroListTest.list[0].engaged.MarkIsEngaged(true)
+
+	anotherHero, err := heroListTest.NextHero()
+	fmt.Println("No hero is available", (err != nil) == true)
+
+	fmt.Println("Error text", err)
+
+	fmt.Println("Can't find another hero", (anotherHero == nil) == true)
+}
+
+func NextHeroMultipleHealthTest() {
+	fmt.Println("\n***********NextHeroMultipleHealthTest***********")
+	var heroListTest = HeroCharacterList{
+		[]*HeroCharacter{
+			&HeroCharacter{
+				&Character{
+					name:        "HeroTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+			&HeroCharacter{
+				&Character{
+					name:        "HeroMultiTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+		},
+	}
+
+	hero, err := heroListTest.NextHero()
+
+	fmt.Println("No errors", (err == nil) == true)
+
+	nextHero, err := heroListTest.NextHero()
+
+	fmt.Println("Same hero is returned", (hero == nextHero) == true)
+
+	heroListTest.list[0].character.health = 0
+
+	anotherHero, err := heroListTest.NextHero()
+	fmt.Println("No errors", (err == nil) == true)
+
+	fmt.Println("Returned the second hero", (anotherHero == heroListTest.list[1]) == true)
+}
+
+func NextHeroMultipleEngagedTest() {
+	fmt.Println("\n***********NextHeroMultipleHealthTest***********")
+	var heroListTest = HeroCharacterList{
+		[]*HeroCharacter{
+			&HeroCharacter{
+				&Character{
+					name:        "HeroTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+			&HeroCharacter{
+				&Character{
+					name:        "HeroMultiTest",
+					attackPower: 20,
+					defense:     50,
+					health:      70,
+				},
+				SafeIsEngaged{
+					isEngaged: false,
+				},
+			},
+		},
+	}
+
+	hero, err := heroListTest.NextHero()
+
+	fmt.Println("No errors", (err == nil) == true)
+
+	nextHero, err := heroListTest.NextHero()
+
+	fmt.Println("Same hero is returned", (hero == nextHero) == true)
+
+	heroListTest.list[0].engaged.MarkIsEngaged(true)
+
+	anotherHero, err := heroListTest.NextHero()
+	fmt.Println("No errors", (err == nil) == true)
+
+	fmt.Println("Returned the second hero", (anotherHero == heroListTest.list[1]) == true)
 }
 
 func BossCharacterTest() {
@@ -662,11 +831,21 @@ func BossFight() {
 		majorVillains.Disengage()
 	}
 
-	fmt.Println("Bosses defeated?", majorVillains.AllBossesDefeated())
-	fmt.Println("Heroes defeated?", heroCharacters.AllHeroesDefeated())
+	allBossesDefeated, allHeroesDefeated := majorVillains.AllBossesDefeated(), heroCharacters.AllHeroesDefeated()
+
+	fmt.Println("Bosses defeated?", allBossesDefeated)
+	fmt.Println("Heroes defeated?", allHeroesDefeated)
 
 	PrintVillainStats(majorVillains)
 	PrintHeroStats(heroCharacters)
+
+	if allHeroesDefeated {
+		fmt.Println("The villains took over the world!")
+	} else if allBossesDefeated {
+		fmt.Println("The heroes saved the day!")
+	} else {
+		fmt.Println("The fight continues another day!")
+	}
 }
 
 func main() {
@@ -762,12 +941,12 @@ func (boss BossCharacter) Fight(c chan string) {
 
 func (h HeroCharacterList) NextHero() (*HeroCharacter, error) {
 	for _, v := range h.list {
-		if v.engaged.IsEngaged() == false {
+		if v.engaged.IsEngaged() == false && v.character.health > 0 {
 			return v, nil
 		}
 	}
 
-	return &HeroCharacter{}, GameError("No hero is available to fight")
+	return nil, GameError("No hero is available to fight")
 }
 
 func (c HeroCharacterList) AllHeroesDefeated() bool {
