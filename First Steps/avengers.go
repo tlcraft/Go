@@ -16,6 +16,7 @@ import (
 var numHeroes = len(heroes.list)
 var numVillains = len(villains.list)
 var numBosses = len(majorVillains.list)
+var numHeroess = len(heroCharacters.list)
 
 type SafeIsEngaged struct {
 	isEngaged bool
@@ -88,79 +89,6 @@ func (m *SafeEngagedList) RemoveFighter(hero *HeroCharacter) {
 			break
 		}
 	}
-}
-
-func (b BossCharacterList) Disengage() {
-	for _, v := range b.list {
-		if v.character.health <= 0 {
-			fmt.Println(v.character.name, "is defeated!")
-			for _, f := range v.fighterList.engagedFighters {
-				if f.character.health > 0 {
-					f.engaged.MarkIsEngaged(false)
-					v.fighterList.RemoveFighter(f)
-					fmt.Println(f.character.name, "is free for battle!")
-				}
-			}
-		} else {
-			for _, f := range v.fighterList.engagedFighters {
-				if f.character.health <= 0 {
-					f.engaged.MarkIsEngaged(false)
-					v.fighterList.RemoveFighter(f)
-					fmt.Println(f.character.name, "is dead")
-				}
-			}
-		}
-	}
-}
-
-func HeroesVsVillains() {
-	PrintStats(heroes, "** Heroes **")
-	PrintStats(villains, "-- Villains --")
-
-	c := make([]chan string, numHeroes)
-
-	fmt.Println("FIGHT!\n")
-
-	for i, _ := range heroes.list {
-		c[i] = make(chan string)
-		go SaveTheWorld(i*numVillains/numHeroes, (i+1)*numVillains/numHeroes, heroes.list[i], villains.list, c[i])
-	}
-
-	for i := range c {
-		for s := range c[i] {
-			fmt.Println(s)
-		}
-	}
-	// TODO Ideas
-	// incorporate advantages and disadvantages for each character
-	// special attacks
-	// Randomly add general enemies to a slice which the heroes iterate over and fight
-	// print living heroes and villains
-
-	fmt.Println("\nFinal Stats")
-	PrintStats(heroes, "** Heroes **")
-	PrintStats(villains, "-- Villains --")
-}
-
-func Test() {
-	BossCharacterTest()
-
-	BossesAllDefeatedTest()
-	HeroesAllDefeatedTest()
-	EndGameBossTest()
-	EndGameHeroTest()
-
-	BossesAllDefeatedMultiTest()
-	HeroesAllDefeatedMultiTest()
-	EndGameHeroMultiTest()
-
-	DisengageBossDeathTest()
-	DisengageHeroDeathTest()
-
-	NextHeroHealthTest()
-	NextHeroEngagedTest()
-	NextHeroMultipleHealthTest()
-	NextHeroMultipleEngagedTest()
 }
 
 func NextHeroHealthTest() {
@@ -330,6 +258,19 @@ func NextHeroMultipleEngagedTest() {
 func BossCharacterTest() {
 	fmt.Println("\n***********Testing out a Boss Character idea***********")
 	ch := make(chan string)
+
+	var testBoss = BossCharacter{
+		&Character{
+			name:        "Sabretooth",
+			attackPower: 10,
+			defense:     55,
+			health:      90,
+		},
+		SafeEngagedList{
+			engagedFighters: make([]*HeroCharacter, 0),
+			capacity:        1,
+		},
+	}
 
 	fmt.Println(testBoss.character.name)
 	fmt.Println(len(testBoss.fighterList.engagedFighters))
@@ -791,15 +732,65 @@ func DisengageHeroDeathTest() {
 	PrintHeroStats(heroListTest)
 }
 
+func Test() {
+	BossCharacterTest()
+
+	BossesAllDefeatedTest()
+	HeroesAllDefeatedTest()
+	EndGameBossTest()
+	EndGameHeroTest()
+
+	BossesAllDefeatedMultiTest()
+	HeroesAllDefeatedMultiTest()
+	EndGameHeroMultiTest()
+
+	DisengageBossDeathTest()
+	DisengageHeroDeathTest()
+
+	NextHeroHealthTest()
+	NextHeroEngagedTest()
+	NextHeroMultipleHealthTest()
+	NextHeroMultipleEngagedTest()
+}
+
+func HeroesVsVillains() {
+	PrintStats(heroes, "** Heroes **")
+	PrintStats(villains, "-- Villains --")
+
+	c := make([]chan string, numHeroes)
+
+	fmt.Println("FIGHT!\n")
+
+	for i, _ := range heroes.list {
+		c[i] = make(chan string)
+		go SaveTheWorld(i*numVillains/numHeroes, (i+1)*numVillains/numHeroes, heroes.list[i], villains.list, c[i])
+	}
+
+	for i := range c {
+		for s := range c[i] {
+			fmt.Println(s)
+		}
+	}
+	// TODO Ideas
+	// incorporate advantages and disadvantages for each character
+	// special attacks
+	// Randomly add general enemies to a slice which the heroes iterate over and fight
+	// print living heroes and villains
+
+	fmt.Println("\nFinal Stats")
+	PrintStats(heroes, "** Heroes **")
+	PrintStats(villains, "-- Villains --")
+}
+
 func BossFight() {
 	// TODO
 	// Start Go routines to send heroes to fight the bosses
 	// When heroes free up send them on to fight again after they recover some amount of health
 
 	fmt.Println("BOSS FIGHT!\n")
-	var count int = 0 // Add a temporary short circuit
-	for !EndGame(majorVillains, heroCharacters) && count < 80 {
-		var c = make([]chan string, len(majorVillains.list))
+	var iterations int = 0
+	for !EndGame(majorVillains, heroCharacters) {
+		var c = make([]chan string, numBosses)
 
 		// Assign heroes to villains
 		for _, v := range majorVillains.list {
@@ -815,7 +806,7 @@ func BossFight() {
 				}
 			}
 		}
-		count++
+		iterations++
 		// Fight!
 		for i, v := range majorVillains.list {
 			c[i] = make(chan string)
@@ -838,6 +829,8 @@ func BossFight() {
 
 	PrintVillainStats(majorVillains)
 	PrintHeroStats(heroCharacters)
+
+	fmt.Println("Iterations", iterations)
 
 	if allHeroesDefeated {
 		fmt.Println("The villains took over the world!")
@@ -914,6 +907,29 @@ func CalculateDamage(i int) (damage int) {
 	return int(n)
 }
 
+func (b BossCharacterList) Disengage() {
+	for _, v := range b.list {
+		if v.character.health <= 0 {
+			fmt.Println(v.character.name, "is defeated!")
+			for _, f := range v.fighterList.engagedFighters {
+				if f.character.health > 0 {
+					f.engaged.MarkIsEngaged(false)
+					v.fighterList.RemoveFighter(f)
+					fmt.Println(f.character.name, "is free for battle!")
+				}
+			}
+		} else {
+			for _, f := range v.fighterList.engagedFighters {
+				if f.character.health <= 0 {
+					f.engaged.MarkIsEngaged(false)
+					v.fighterList.RemoveFighter(f)
+					fmt.Println(f.character.name, "is dead")
+				}
+			}
+		}
+	}
+}
+
 func (c BossCharacterList) AllBossesDefeated() bool {
 	var isDefeated = false
 	for _, v := range c.list {
@@ -927,6 +943,16 @@ func (c BossCharacterList) AllBossesDefeated() bool {
 	return isDefeated
 }
 
+func (h HeroCharacterList) NextHero() (*HeroCharacter, error) {
+	for _, v := range h.list {
+		if v.engaged.IsEngaged() == false && v.character.health > 0 {
+			return v, nil
+		}
+	}
+
+	return nil, GameError("No hero is available to fight")
+}
+
 func (boss BossCharacter) Fight(c chan string) {
 	defer close(c)
 	if boss.fighterList.CanFight() {
@@ -937,16 +963,6 @@ func (boss BossCharacter) Fight(c chan string) {
 	} else {
 		c <- fmt.Sprint("The fight cannot commence yet.")
 	}
-}
-
-func (h HeroCharacterList) NextHero() (*HeroCharacter, error) {
-	for _, v := range h.list {
-		if v.engaged.IsEngaged() == false && v.character.health > 0 {
-			return v, nil
-		}
-	}
-
-	return nil, GameError("No hero is available to fight")
 }
 
 func (c HeroCharacterList) AllHeroesDefeated() bool {
@@ -1009,19 +1025,6 @@ type BossCharacterList struct {
 	list []*BossCharacter
 }
 
-var testBoss = BossCharacter{
-	&Character{
-		name:        "Sabretooth",
-		attackPower: 10,
-		defense:     55,
-		health:      90,
-	},
-	SafeEngagedList{
-		engagedFighters: make([]*HeroCharacter, 0),
-		capacity:        1,
-	},
-}
-
 var majorVillains = BossCharacterList{
 	[]*BossCharacter{
 		&BossCharacter{
@@ -1059,41 +1062,6 @@ var majorVillains = BossCharacterList{
 				engagedFighters: make([]*HeroCharacter, 0),
 				capacity:        1,
 			},
-		},
-	},
-}
-
-var heroes = CharacterList{
-	[]*Character{
-		&Character{
-			name:        "Thor",
-			attackPower: 20,
-			defense:     50,
-			health:      70,
-		},
-		&Character{
-			name:        "Iron Man",
-			attackPower: 15,
-			defense:     45,
-			health:      60,
-		},
-		&Character{
-			name:        "Spider-Man",
-			attackPower: 10,
-			defense:     30,
-			health:      50,
-		},
-		&Character{
-			name:        "Captain Marvel",
-			attackPower: 25,
-			defense:     65,
-			health:      110,
-		},
-		&Character{
-			name:        "Wolverine",
-			attackPower: 30,
-			defense:     60,
-			health:      100,
 		},
 	},
 }
@@ -1198,6 +1166,41 @@ var heroCharacters = HeroCharacterList{
 			SafeIsEngaged{
 				isEngaged: false,
 			},
+		},
+	},
+}
+
+var heroes = CharacterList{
+	[]*Character{
+		&Character{
+			name:        "Thor",
+			attackPower: 20,
+			defense:     50,
+			health:      70,
+		},
+		&Character{
+			name:        "Iron Man",
+			attackPower: 15,
+			defense:     45,
+			health:      60,
+		},
+		&Character{
+			name:        "Spider-Man",
+			attackPower: 10,
+			defense:     30,
+			health:      50,
+		},
+		&Character{
+			name:        "Captain Marvel",
+			attackPower: 25,
+			defense:     65,
+			health:      110,
+		},
+		&Character{
+			name:        "Wolverine",
+			attackPower: 30,
+			defense:     60,
+			health:      100,
 		},
 	},
 }
