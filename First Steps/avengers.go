@@ -782,6 +782,59 @@ func HeroesVsVillains() {
 	PrintStats(villains, "-- Villains --")
 }
 
+func (b *BossCharacter) FightParallel(c chan string) {
+	// Assign heroes to villain
+	for b.character.health > 0 {
+		for b.fighterList.capacity != len(b.fighterList.engagedFighters) {
+			nextHero, err := heroCharacters.NextHero()
+			if err == nil {
+				b.fighterList.Add(nextHero)
+			} else {
+				fmt.Println(err)
+				break
+			}
+		}
+
+		go b.Fight(c)
+
+		majorVillains.Disengage()
+	}
+}
+
+func BossFightParallel() {
+	fmt.Println("BOSS FIGHT Parallel!\n")
+
+	var c = make([]chan string, numBosses)
+
+	// Fight!
+	for i, v := range majorVillains.list {
+		c[i] = make(chan string)
+		go v.FightParallel(c[i])
+	}
+
+	for i := range c {
+		for s := range c[i] {
+			fmt.Println(s)
+		}
+	}
+
+	allBossesDefeated, allHeroesDefeated := majorVillains.AllBossesDefeated(), heroCharacters.AllHeroesDefeated()
+
+	fmt.Println("Bosses defeated?", allBossesDefeated)
+	fmt.Println("Heroes defeated?", allHeroesDefeated)
+
+	PrintVillainStats(majorVillains)
+	PrintHeroStats(heroCharacters)
+
+	if allHeroesDefeated {
+		fmt.Println("The villains took over the world!")
+	} else if allBossesDefeated {
+		fmt.Println("The heroes saved the day!")
+	} else {
+		fmt.Println("The fight continues another day!")
+	}
+}
+
 func BossFight() {
 	// TODO
 	// Start Go routines to send heroes to fight the bosses
