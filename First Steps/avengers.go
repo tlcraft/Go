@@ -783,8 +783,10 @@ func HeroesVsVillains() {
 }
 
 func (b *BossCharacter) FightParallel(c chan string) {
+	defer close(c)
+
 	// Assign heroes to villain
-	for b.character.health > 0 {
+	for b.character.health > 0 && !EndGame(majorVillains, heroCharacters) {
 		for b.fighterList.capacity != len(b.fighterList.engagedFighters) {
 			nextHero, err := heroCharacters.NextHero()
 			if err == nil {
@@ -795,7 +797,7 @@ func (b *BossCharacter) FightParallel(c chan string) {
 			}
 		}
 
-		go b.Fight(c)
+		go b.FightCore(c)
 
 		majorVillains.Disengage()
 	}
@@ -898,6 +900,7 @@ func main() {
 	//HeroesVsVillains()
 	//Test()
 	BossFight()
+	//BossFightParallel()
 }
 
 func EngageWithBoss(i, n int, heroList *HeroCharacterList, bossList []*BossCharacter, c chan string) {
@@ -973,7 +976,7 @@ func (b BossCharacterList) Disengage() {
 			}
 		} else {
 			for _, f := range v.fighterList.engagedFighters {
-				if f.character.health <= 0 {
+				if f != nil && f.character.health <= 0 {
 					f.engaged.MarkIsEngaged(false)
 					v.fighterList.RemoveFighter(f)
 					fmt.Println(f.character.name, "is dead")
@@ -1006,8 +1009,7 @@ func (h HeroCharacterList) NextHero() (*HeroCharacter, error) {
 	return nil, GameError("No hero is available to fight")
 }
 
-func (boss BossCharacter) Fight(c chan string) {
-	defer close(c)
+func (boss BossCharacter) FightCore(c chan string) {
 	if boss.fighterList.CanFight() {
 		for _, v := range boss.fighterList.engagedFighters {
 			Battle(v.character, boss.character, c)
@@ -1016,6 +1018,11 @@ func (boss BossCharacter) Fight(c chan string) {
 	} else {
 		c <- fmt.Sprint("The fight cannot commence yet.")
 	}
+}
+
+func (boss BossCharacter) Fight(c chan string) {
+	defer close(c)
+	boss.FightCore(c)
 }
 
 func (c HeroCharacterList) AllHeroesDefeated() bool {
