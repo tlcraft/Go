@@ -787,6 +787,8 @@ func (b *BossCharacter) FightParallel(c chan string) {
 
 	// Assign heroes to villain
 	for b.character.health > 0 && !EndGame(majorVillains, heroCharacters) {
+		ch := make(chan string)
+
 		for b.fighterList.capacity != len(b.fighterList.engagedFighters) {
 			nextHero, err := heroCharacters.NextHero()
 			if err == nil {
@@ -797,7 +799,11 @@ func (b *BossCharacter) FightParallel(c chan string) {
 			}
 		}
 
-		go b.FightCore(c)
+		go b.Fight(ch)
+
+		for s := range ch {
+			c <- s
+		}
 
 		majorVillains.Disengage()
 	}
@@ -899,8 +905,8 @@ func BossFight() {
 func main() {
 	//HeroesVsVillains()
 	//Test()
-	BossFight()
-	//BossFightParallel()
+	//BossFight()
+	BossFightParallel()
 }
 
 func EngageWithBoss(i, n int, heroList *HeroCharacterList, bossList []*BossCharacter, c chan string) {
@@ -1011,7 +1017,8 @@ func (h HeroCharacterList) NextHero() (*HeroCharacter, error) {
 
 func (boss BossCharacter) FightCore(c chan string) {
 	if boss.fighterList.CanFight() {
-		for _, v := range boss.fighterList.engagedFighters {
+		for i, v := range boss.fighterList.engagedFighters {
+			fmt.Println("Fighter Index", i)
 			Battle(v.character, boss.character, c)
 			Battle(boss.character, v.character, c)
 		}
