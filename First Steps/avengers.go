@@ -820,9 +820,11 @@ func BossFightParallel() {
 		go v.FightParallel(c[i])
 	}
 
+	var iterations int = 0
 	for i := range c {
 		for s := range c[i] {
 			fmt.Println(s)
+			iterations++
 		}
 	}
 
@@ -833,6 +835,8 @@ func BossFightParallel() {
 
 	PrintVillainStats(majorVillains)
 	PrintHeroStats(heroCharacters)
+
+	fmt.Println("Iterations", iterations)
 
 	if allHeroesDefeated {
 		fmt.Println("The villains took over the world!")
@@ -867,7 +871,7 @@ func BossFight() {
 				}
 			}
 		}
-		iterations++
+
 		// Fight!
 		for i, v := range majorVillains.list {
 			c[i] = make(chan string)
@@ -877,6 +881,7 @@ func BossFight() {
 		for i := range c {
 			for s := range c[i] {
 				fmt.Println(s)
+				iterations++
 			}
 		}
 
