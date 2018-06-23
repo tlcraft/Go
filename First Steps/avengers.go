@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"math/big"
 	"sync"
+	"time"
 )
 
 var numHeroes = len(heroes.list)
@@ -910,8 +911,16 @@ func BossFight() {
 func main() {
 	//HeroesVsVillains()
 	//Test()
-	//BossFight()
+	startBossFight := time.Now()
+	BossFight()
+	elapsedBossFight := time.Since(startBossFight)
+
+	startBossFightParallel := time.Now()
 	BossFightParallel()
+	elapsedBossFightParallel := time.Since(startBossFightParallel)
+
+	fmt.Println("\nBoss Fight Elapsed Time:", elapsedBossFight)
+	fmt.Println("Boss Fight Parallel Elapsed Time:", elapsedBossFightParallel)
 }
 
 func EngageWithBoss(i, n int, heroList *HeroCharacterList, bossList []*BossCharacter, c chan string) {
