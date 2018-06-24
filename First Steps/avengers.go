@@ -17,7 +17,6 @@ import (
 var numHeroes = len(heroes.list)
 var numVillains = len(villains.list)
 var numBosses = len(majorVillains.list)
-var numHeroess = len(heroCharacters.list)
 
 type SafeIsEngaged struct {
 	isEngaged bool
@@ -776,7 +775,6 @@ func HeroesVsVillains() {
 	// incorporate advantages and disadvantages for each character
 	// special attacks
 	// Randomly add general enemies to a slice which the heroes iterate over and fight
-	// print living heroes and villains
 
 	fmt.Println("\nFinal Stats")
 	PrintStats(heroes, "** Heroes **")
@@ -849,10 +847,6 @@ func BossFightParallel() {
 }
 
 func BossFight() {
-	// TODO
-	// Start Go routines to send heroes to fight the bosses
-	// When heroes free up send them on to fight again after they recover some amount of health
-
 	fmt.Println("BOSS FIGHT!\n")
 	var iterations int = 0
 	for !EndGame(majorVillains, heroCharacters) {
@@ -992,6 +986,7 @@ func (b BossCharacterList) Disengage() {
 					f.engaged.MarkIsEngaged(false)
 					v.fighterList.RemoveFighter(f)
 					fmt.Println(f.character.name, "is free for battle!")
+					f.character.health += 25
 				}
 			}
 		} else {
@@ -1077,6 +1072,8 @@ func (e GameError) Error() string {
 	return string(e)
 }
 
+// TODO
+// Max health
 type Character struct {
 	name        string
 	attackPower int
